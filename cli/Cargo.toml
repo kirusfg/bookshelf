@@ -6,3 +6,4 @@ authors = ["Kirill Kirillov <kirusfg@gmail.com>"]
 
 [dependencies]
 clap = "2.33.3"
+lib = { path = "../lib", version = "0.1.0" }
