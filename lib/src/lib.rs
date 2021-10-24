@@ -1,6 +1,4 @@
-pub fn add_file(file: String) {
-    println!("Added file {}", file)
-}
+pub mod entry;
 
 #[cfg(test)]
 mod tests {
