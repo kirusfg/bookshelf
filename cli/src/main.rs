@@ -1,7 +1,7 @@
 use clap::{crate_authors, crate_version, App, Arg, SubCommand};
 
 mod entry;
-use entry::add_entry;
+use entry::{add_entry, get_all_entries};
 
 fn main() {
     // TODO: Move this to another module and generate completion files for different shells at compile time
@@ -29,6 +29,7 @@ fn main() {
                         .required(true),
                 ),
         )
+        .subcommand(SubCommand::with_name("list").about("Lists all items on your bookshelf"))
         .get_matches();
 
     match matches.subcommand() {
@@ -36,6 +37,7 @@ fn main() {
             &sub_m.value_of("kind").unwrap().to_string(),
             &sub_m.value_of("file").unwrap().to_string(),
         ),
+        ("list", Some(_)) => get_all_entries(),
         _ => println!("Unknown command"),
     };
 }

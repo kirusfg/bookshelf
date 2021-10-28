@@ -1,10 +1,16 @@
-use std::fmt::Display;
+use serde::{Deserialize, Serialize};
 
+use std::{collections::HashSet, fmt::Display, io::Error};
+
+use crate::shelf::Shelf;
+
+#[derive(Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub struct Author {
     pub name: String,
     pub works: Vec<Entry>,
 }
 
+#[derive(Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub enum Kind {
     Book,
     Article,
@@ -19,6 +25,7 @@ impl Display for Kind {
     }
 }
 
+#[derive(Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub struct Entry {
     pub title: String,
     pub path: String,
@@ -36,6 +43,19 @@ impl Display for Entry {
     }
 }
 
-pub fn add_entry(entry: Entry) {
-    println!("Added {}", entry)
+pub fn add_entry(entry: Entry) -> Result<(), Error> {
+    let mut shelf: Shelf = Shelf::read_from_file().unwrap();
+    shelf.add_entry(entry);
+    shelf.write_to_file()
+}
+
+pub fn remove_entry(entry: Entry) -> Result<(), Error> {
+    let mut shelf: Shelf = Shelf::read_from_file().unwrap();
+    shelf.remove_entry(entry);
+    shelf.write_to_file()
+}
+
+pub fn get_all_entries() -> Result<HashSet<Entry>, Error> {
+    let shelf: Shelf = Shelf::read_from_file().unwrap();
+    Ok(shelf.entries)
 }

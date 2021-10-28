@@ -1,4 +1,5 @@
 use lib::entry::{Entry, Kind};
+use std::collections::HashSet;
 
 pub fn add_entry(kind: &str, path: &str) {
     let kind: Kind = match kind {
@@ -16,4 +17,13 @@ pub fn add_entry(kind: &str, path: &str) {
         tags: None,
         doi: None,
     })
+    .unwrap();
+}
+
+pub fn get_all_entries() {
+    let entries: HashSet<Entry> = lib::entry::get_all_entries().unwrap();
+
+    for entry in entries {
+        println!("{}", entry);
+    }
 }
