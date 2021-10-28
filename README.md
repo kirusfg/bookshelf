@@ -3,13 +3,13 @@ A tool aiming to facilitate your reading process and enforce the habit.
 
 ## Features
 ### Library & CLI
-[ ] Organizing books, articles, journals, magazines, comic books, guides, and more locally
-[ ] Saving BibTex references
+- [ ] Organizing books, articles, journals, magazines, comic books, guides, and more locally
+- [ ] Saving BibTex references
 
 ### TUI
-[ ] Browsing through your bookshelf and opening the files using a reader of choice
-[ ] Adding new files and categories interactively
-[ ] Retrieving BibTex references
+- [ ] Browsing through your bookshelf and opening the files using a reader of choice
+- [ ] Adding new files and categories interactively
+- [ ] Retrieving BibTex references
 
 ## Building
 ### Development
