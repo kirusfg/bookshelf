@@ -1,5 +1,5 @@
 # BookShelf
-[![](https://tokei.rs/b1/github/XAMPPRocky/tokei)](https://github.com/kirusfg/bookshelf)
+[![](https://tokei.rs/b1/github/kirusfg/bookshelf)](https://github.com/kirusfg/bookshelf)
 
 A tool aiming to facilitate your reading process and enforce the habit.
 
