@@ -16,12 +16,12 @@ pub struct Shelf {
 }
 
 impl Shelf {
-    pub fn add_entry(&mut self, entry: Entry) {
-        self.entries.insert(entry);
+    pub fn add_entry(&mut self, entry: Entry) -> bool {
+        self.entries.insert(entry)
     }
 
-    pub fn remove_entry(&mut self, entry: Entry) {
-        self.entries.remove(&entry);
+    pub fn remove_entry(&mut self, entry: Entry) -> bool {
+        self.entries.remove(&entry)
     }
 
     pub fn init() -> Result<(), Error> {
@@ -56,7 +56,6 @@ impl Shelf {
             Self::init()?;
         }
 
-        println!("{}", db_file.to_str().unwrap());
         let mut binary_data: Vec<u8> = Vec::new();
 
         let mut db_file = File::open(db_file).unwrap();
@@ -66,4 +65,62 @@ impl Shelf {
 
         Ok(shelf)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        entry::{Entry, Kind},
+        shelf::*,
+    };
+
+    fn new_entry() -> Entry {
+        let entry: Entry = Entry {
+            title: String::from("Harry Potter"),
+            path: String::from("./harrypotter.pdf"),
+            kind: Kind::Book,
+            year: Some(2004),
+            author: None,
+            doi: None,
+            tags: None,
+        };
+
+        entry
+    }
+
+    fn local_config() -> Config {
+        let mut config: Config = Config::default();
+        config.path = String::from("test.toml");
+        config.db.path = String::from("db");
+
+        config
+    }
+
+    #[test]
+    fn add_and_remove_entry() {
+        // Test config
+        let _config: Config = local_config();
+
+        let entry: Entry = new_entry();
+
+        let mut shelf: Shelf = Shelf::default();
+
+        assert!(shelf.add_entry(entry.clone()));
+        assert!(shelf.remove_entry(entry.clone()));
+
+        assert_eq!(shelf.entries.len(), 0);
+    }
+
+    #[test]
+    fn remove_unexistent_entry() {
+        // Test config
+        let _config: Config = local_config();
+
+        let entry: Entry = new_entry();
+
+        let mut shelf: Shelf = Shelf::default();
+        assert!(!shelf.remove_entry(entry));
+    }
+
+    // TODO Write tests for (de-)serilization of the shelf into file
 }

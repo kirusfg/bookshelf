@@ -1,12 +1,11 @@
+use config::{Config as AppConfig, ConfigError, Environment, File as ConfigFile};
+use directories::ProjectDirs;
+use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::{Path, PathBuf},
 };
-
-use config::{Config as AppConfig, ConfigError, Environment, File as ConfigFile};
-use directories::ProjectDirs;
-use serde::{Deserialize, Serialize};
 use toml::to_vec;
 
 #[derive(Deserialize, Serialize)]
@@ -29,9 +28,27 @@ impl Default for Database {
     }
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Config {
+    pub path: String,
     pub db: Database,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        let config_path: String = ProjectDirs::from("", "", "bookshelf")
+            .unwrap()
+            .config_dir()
+            .join("config.toml")
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        Config {
+            path: config_path,
+            db: Database::default(),
+        }
+    }
 }
 
 impl Config {
@@ -105,5 +122,24 @@ impl Config {
             .config_dir()
             .join("config.toml")
             .exists()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use directories::ProjectDirs;
+
+    #[test]
+    fn default_config() {
+        let config: Config = Config::get_or_default().unwrap();
+
+        let dirs: ProjectDirs = ProjectDirs::from("", "", "bookshelf").unwrap();
+        let config_folder: &Path = dirs.config_dir();
+
+        assert_eq!(
+            config.db.path,
+            config_folder.join("db").to_str().unwrap().to_string()
+        );
     }
 }
