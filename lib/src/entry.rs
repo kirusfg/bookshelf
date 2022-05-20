@@ -1,116 +1,73 @@
 use serde::{Deserialize, Serialize};
+use std::{hash::Hash, path::PathBuf};
 
-use std::{collections::HashSet, fmt::Display, io::Error};
-
-use crate::shelf::Shelf;
-
-#[derive(Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
-pub struct Author {
-    pub name: String,
-    pub works: Vec<Entry>,
+/// [`Entry`] is any file that can be contained in your bookshelf.
+///
+/// Essentially, it is just a path to a file, which in turn can be
+/// a book, an article, or a png file of a poster/infographic. This
+/// path must be unique to be stored on a shelf - no duplicates
+/// are allowed.
+#[derive(Clone, Deserialize, Eq, Serialize)]
+pub struct Entry {
+    /// Entry id
+    pub id: u64,
+    /// Path to the entry (can be a link), must be unique
+    pub path: PathBuf,
+    /// Path to an optional bibliography entry in BibTeX format
+    pub bib_path: Option<PathBuf>,
+    /// Optional list of tags
+    pub tags: Option<Vec<String>>,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
-pub enum Kind {
-    Book,
-    Article,
-}
+impl Hash for Entry {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.path.hash(state);
+    }
 
-impl Display for Kind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Kind::Book => write!(f, "a book"),
-            Kind::Article => write!(f, "an article"),
+    fn hash_slice<H: std::hash::Hasher>(data: &[Self], state: &mut H)
+    where
+        Self: Sized,
+    {
+        for piece in data {
+            piece.path.hash(state);
         }
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
-pub struct Entry {
-    pub title: String,
-    pub path: String,
-    pub kind: Kind,
-    pub author: Option<Vec<Author>>,
-    pub year: Option<u32>,
-    pub tags: Option<Vec<String>>,
-    pub doi: Option<String>,
-}
-
-impl Display for Entry {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} \"{}\"", self.kind, self.title)
-        // TODO: Proper pretty printing for books with multiple authors
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        self.path.canonicalize().unwrap() == other.path.canonicalize().unwrap()
     }
-}
-
-pub fn add_entry(entry: Entry) -> Result<bool, Error> {
-    let mut shelf: Shelf = Shelf::read_from_file().unwrap();
-    let result: bool = shelf.add_entry(entry);
-    shelf.write_to_file()?;
-    Ok(result)
-}
-
-pub fn remove_entry(entry: Entry) -> Result<bool, Error> {
-    let mut shelf: Shelf = Shelf::read_from_file().unwrap();
-    let result: bool = shelf.remove_entry(entry);
-    shelf.write_to_file()?;
-    Ok(result)
-}
-
-pub fn get_all_entries() -> Result<HashSet<Entry>, Error> {
-    let shelf: Shelf = Shelf::read_from_file().unwrap();
-    Ok(shelf.entries)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{config::Config, entry::*};
+    use crate::entry::*;
 
-    fn new_entry() -> Entry {
-        let entry: Entry = Entry {
-            title: String::from("Harry Potter"),
-            path: String::from("./harrypotter.pdf"),
-            kind: Kind::Book,
-            year: Some(2004),
-            author: None,
-            doi: None,
-            tags: None,
+    // TODO: create two symlinks to the same file programmatically
+    fn setup() {
+        todo!()
+    }
+
+    #[test]
+    fn entries_with_same_paths() {
+        let entry1 = Entry {
+            id: 1,
+            path: PathBuf::from("./harry_potter.pdf"),
+            bib_path: None,
+            tags: Some(vec![String::from("fantasy"), String::from("favorite")]),
         };
 
-        entry
-    }
+        let entry2 = Entry {
+            id: 2,
+            path: PathBuf::from("./not_harry_potter.pdf"),
+            bib_path: None,
+            tags: Some(vec![
+                String::from("fantasy"),
+                String::from("invirogating"),
+            ]),
+        };
 
-    fn local_config() -> Config {
-        let mut config: Config = Config::default();
-        config.path = String::from("test.toml");
-        config.db.path = String::from("db");
-
-        config
-    }
-
-    #[test]
-    fn add_and_remove_entry() {
-        // Test config
-        let _config: Config = local_config();
-
-        let entry: Entry = new_entry();
-
-        let result: bool = add_entry(entry.clone()).unwrap();
-        assert!(result);
-        let result: bool = remove_entry(entry.clone()).unwrap();
-        assert!(result);
-
-        let entries: HashSet<Entry> = get_all_entries().unwrap();
-
-        assert_eq!(entries.len(), 0);
-    }
-
-    #[test]
-    fn remove_unexistent_entry() {
-        // Test config
-        let _config: Config = local_config();
-
-        let entry: Entry = new_entry();
-        assert!(!remove_entry(entry).unwrap());
+        assert!(entry1 == entry2);
     }
 }

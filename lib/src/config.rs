@@ -1,57 +1,39 @@
-use config::{Config as AppConfig, ConfigError, Environment, File as ConfigFile};
+use config::{
+    Config as AppConfig, ConfigError, Environment, File as ConfigFile,
+};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 use toml::to_vec;
 
-#[derive(Deserialize, Serialize)]
-pub struct Database {
-    pub path: String,
-}
-
-impl Default for Database {
-    fn default() -> Self {
-        let path: String = ProjectDirs::from("", "", "bookshelf")
-            .unwrap()
-            .config_dir()
-            .join("db")
-            .as_os_str()
-            .to_str()
-            .unwrap()
-            .to_string();
-
-        Database { path }
-    }
-}
-
+/// The configuration for the app.
 #[derive(Deserialize, Serialize)]
 pub struct Config {
-    pub path: String,
-    pub db: Database,
+    /// The path to a file for the Shelf to be saved to.
+    pub db: PathBuf,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let config_path: String = ProjectDirs::from("", "", "bookshelf")
-            .unwrap()
-            .config_dir()
-            .join("config.toml")
-            .to_str()
-            .unwrap()
-            .to_string();
-
         Config {
-            path: config_path,
-            db: Database::default(),
+            db: Self::default_config_dir().join("db"),
         }
     }
 }
 
 impl Config {
+    /// A helper function, returns the PathBuf to the default config directory.
+    pub fn default_config_dir() -> PathBuf {
+        ProjectDirs::from("com", "kirusfg", "bookshelf")
+            .unwrap()
+            .config_dir()
+            .to_path_buf()
+    }
+
     /// Returns a `Config` with settings from config.toml located in the
     /// OS's default config directory merged with the environment variables.
     /// If it is not created yet, initializes the config with default values.
@@ -59,7 +41,7 @@ impl Config {
     /// # Errors
     ///
     /// Returns `ConfigError` if either reading the config file or
-    /// the environment has failed
+    /// the environment has failed.
     pub fn get_or_default() -> Result<Self, ConfigError> {
         match Self::exists() {
             true => Self::get(),
@@ -68,78 +50,61 @@ impl Config {
     }
 
     /// Returns a `Config` with settings from config.toml located in the
-    /// OS's default config directory merged with the environment variables
+    /// OS's default config directory merged with the environment variables.
     ///
     /// # Errors
     ///
     /// Returns `ConfigError` if either reading the config file or
-    /// the environment has failed
-    fn get() -> Result<Self, ConfigError> {
-        let config_path: PathBuf = ProjectDirs::from("", "", "bookshelf")
+    /// the environment has failed.
+    pub fn get() -> Result<Self, ConfigError> {
+        AppConfig::builder()
+            .add_source(ConfigFile::from(Self::default_config_dir()))
+            .add_source(Environment::with_prefix("BOOKSHELF"))
+            .build()
             .unwrap()
-            .config_dir()
-            .join("config.toml");
-
-        let mut app_config: AppConfig = AppConfig::default();
-        app_config.merge(ConfigFile::from(config_path)).unwrap();
-        app_config
-            .merge(Environment::with_prefix("BOOKSHELF"))
-            .unwrap();
-
-        Ok(app_config.try_into().unwrap())
+            .try_deserialize::<Config>()
     }
 
     /// Writes a default `Config` into config.toml located at the
     /// OS's default config directory, and returns it.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if there is some IO error
-    fn init() -> Result<Self, ConfigError> {
-        // Creating a config folder "bookshelf" if it doesn't exist yet
-        let dirs: ProjectDirs = ProjectDirs::from("", "", "bookshelf").unwrap();
-        let config_folder: &Path = dirs.config_dir();
-        create_dir_all(config_folder).unwrap();
+    /// Returns an error if either config directory or file could not be
+    /// created.
+    pub fn init() -> Result<Self, ConfigError> {
+        if create_dir_all(Self::default_config_dir()).is_err() {
+            return Err(ConfigError::Message(
+                "Couldn't create the config directory".to_string(),
+            ));
+        }
 
-        // Creating a Config with default values
-        let config: Config = Config::default();
-
-        // Creating a config.toml file with default settings if it doesn't exist yet
-        let config_file_path: PathBuf = config_folder.join("config.toml");
-        let mut config_file: File = File::create(config_file_path).unwrap();
+        let default_config = Config::default();
+        let mut config_file =
+            File::create(Self::default_config_dir().join("config.toml"))
+                .unwrap();
 
         // Writing the default Config to config.toml
-        let config_toml = to_vec(&config).unwrap();
+        let config_toml = to_vec(&Config::default()).unwrap();
         config_file.write_all(&config_toml).unwrap();
 
-        Ok(config)
+        Ok(default_config)
     }
 
-    /// Returns whether the config folder and config.toml exist
-    fn exists() -> bool {
-        ProjectDirs::from("", "", "bookshelf")
-            .unwrap()
-            .config_dir()
-            .join("config.toml")
-            .exists()
+    /// Returns whether the config folder and config.toml exist.
+    pub fn exists() -> bool {
+        Self::default_config_dir().join("config.toml").exists()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use directories::ProjectDirs;
 
     #[test]
     fn default_config() {
-        let config: Config = Config::get_or_default().unwrap();
-
-        let dirs: ProjectDirs = ProjectDirs::from("", "", "bookshelf").unwrap();
-        let config_folder: &Path = dirs.config_dir();
-
-        assert_eq!(
-            config.db.path,
-            config_folder.join("db").to_str().unwrap().to_string()
-        );
+        if Config::init().is_ok() {
+            assert!(Config::exists());
+        }
     }
 }
