@@ -1,10 +1,7 @@
 #![deny(missing_docs, clippy::all)]
-//! This library
+//! A bookshelf library
 
-/// The configuration for the app
-pub mod config;
-
-/// Everything regarding entries
+/// Entry definition
 pub mod entry;
 
 /// The storage for the entries
