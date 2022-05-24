@@ -1,4 +1,4 @@
-use super::entry::Entry;
+use super::{entry::Entry, tag::Tag};
 
 use bincode::{deserialize, serialize};
 use serde::{Deserialize, Serialize};
@@ -17,10 +17,13 @@ use std::{
 pub struct Shelf {
     /// Items on a shelf
     pub entries: HashSet<Entry>,
+    /// All tags associated with entries
+    pub tags: HashSet<Tag>,
 }
 
 impl Shelf {
-    /// Adds a new [`Entry`] to the shelf.
+    /// Adds a new [`Entry`] and its tags to the shelf if those were not present
+    /// before.
     ///
     /// # Returns
     ///
@@ -33,7 +36,15 @@ impl Shelf {
     /// for Entry converts the paths to their canonical form, and if the path
     /// does not exist, program crashes.
     pub fn add(&mut self, entry: Entry) -> bool {
-        self.entries.insert(entry)
+        let is_new = self.entries.insert(entry.clone());
+
+        if is_new && entry.tags.is_some() {
+            for tag in entry.tags.unwrap().into_iter() {
+                self.tags.insert(tag);
+            }
+        }
+
+        is_new
     }
 
     /// Removes the given [`Entry`] from the shelf.
@@ -73,16 +84,41 @@ impl Shelf {
     ///
     /// This function will return an error if reading from the file fails.
     pub fn open(file: PathBuf) -> Result<Shelf, Box<dyn Error>> {
-        let mut binary_data: Vec<u8> = Vec::new();
+        let mut binary_data = Vec::new();
 
         let mut db_file = File::open(file).unwrap();
         db_file.read_to_end(&mut binary_data)?;
 
-        let shelf: Shelf = deserialize(&binary_data).unwrap();
+        let shelf = deserialize(&binary_data).unwrap();
 
         Ok(shelf)
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::{entry::*, shelf::*, tag::*, test_utils::*};
+
+    #[test]
+    fn no_duplicate_tags() {
+        let dir = setup();
+
+        let entry1 = Entry::new(dir.join("book.txt").to_str().unwrap())
+            .with_tags(&[Tag::new("fiction")]);
+        let entry2 = Entry::new(dir.join("another_book.txt").to_str().unwrap())
+            .with_tags(&[Tag::new("fiction"), Tag::new("classics")]);
+
+        let mut shelf = Shelf::default();
+
+        shelf.add(entry1);
+        shelf.add(entry2);
+
+        assert_eq!(shelf.tags.len(), 2);
+
+        let mut tags_vec = shelf.tags.iter().collect::<Vec<&Tag>>();
+        tags_vec.sort();
+
+        assert_eq!(tags_vec[0], &Tag::new("classics"));
+        assert_eq!(tags_vec[1], &Tag::new("fiction"));
+    }
+}
