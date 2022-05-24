@@ -1,4 +1,8 @@
-# [![bookshelf](assets/logo.png)](https://github.com/kirusfg/bookshelf)
+<p align="center">
+    <br>
+    <img src="https://github.com/kirusfg/bookshelf/blob/main/assets/logo.png" width="800"/>
+    <br>
+<p>
 
 A tool aiming to facilitate your reading process and enforce the habit.
 
