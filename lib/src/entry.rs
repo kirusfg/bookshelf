@@ -103,40 +103,7 @@ impl Entry {
 
 #[cfg(test)]
 mod tests {
-    use crate::entry::*;
-    use std::{env::temp_dir, fs::File};
-
-    fn setup() -> PathBuf {
-        let dir = temp_dir();
-
-        let _ = File::create(dir.join("test.txt"));
-
-        #[cfg(target_family = "windows")]
-        let _ = std::os::windows::fs::symlink_file(
-            dir.join("test.txt"),
-            dir.join("link1.txt"),
-        );
-
-        #[cfg(target_family = "windows")]
-        let _ = std::os::windows::fs::symlink_file(
-            dir.join("test.txt"),
-            dir.join("link2.txt"),
-        );
-
-        #[cfg(target_family = "unix")]
-        let _ = std::os::unix::fs::symlink(
-            dir.join("test.txt"),
-            dir.join("link1.txt"),
-        );
-
-        #[cfg(target_family = "unix")]
-        let _ = std::os::unix::fs::symlink(
-            dir.join("test.txt"),
-            dir.join("link2.txt"),
-        );
-
-        dir
-    }
+    use crate::{entry::*, test_utils::setup};
 
     #[test]
     #[should_panic]
