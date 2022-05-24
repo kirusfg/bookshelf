@@ -159,7 +159,7 @@ mod tests {
     #[should_panic]
     fn duplicate_tags() {
         let dir = setup();
-        let _ = Entry::new(dir.join("non_existent.pdf").to_str().unwrap())
+        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction"), Tag::new("fiction")]);
     }
 }
