@@ -1,30 +1,18 @@
-# BookShelf
-[![](https://tokei.rs/b1/github/kirusfg/bookshelf)](https://github.com/kirusfg/bookshelf)
+# [![bookshelf](assets/logo.png)](https://github.com/kirusfg/bookshelf)
 
 A tool aiming to facilitate your reading process and enforce the habit.
 
 ## Features
-### Library & CLI
-- [ ] Organizing books, articles, journals, magazines, comic books, guides, and more locally
-- [ ] Saving BibTex references
 
-### TUI
+Features planned:
+
+### Core
+- [ ] Add associated BibTeX references
+- [ ] Link a summary/note file of any convenient format (Markdown, TeX, plaintext, etc.)
+- [ ] Sort books by tags, date last read, rating, etc.
+- [ ] Organize entries by tags into actual structures locally (directories)
+
+### CLI & TUI
 - [ ] Browsing through your bookshelf and opening the files using a reader of choice
-- [ ] Adding new files and categories interactively
-- [ ] Retrieving BibTex references
-
-## Building
-### Development
-Nothing crazy, this is a project managed by cargo, all you have to do is
-```
-cargo build
-cargo run
-```
-
-### Release
-Build the optimized application using
-```
-cargo build --release
-```
-and place the binary in your PATH for convenience.
-
+- [ ] Adding new entries and tags interactively
+- [ ] Retrieving BibTeX references (clipboard)
