@@ -14,12 +14,19 @@ pub mod shelf;
 pub mod test_utils {
     use std::{env::temp_dir, fs::File, path::PathBuf};
 
+    /// This function provides a made up repository of books, BibTeX files, and
+    /// similar things useful for testing
     pub fn setup() -> PathBuf {
         let dir = temp_dir();
 
         let _ = File::create(dir.join("book.txt"));
         let _ = File::create(dir.join("another_book.txt"));
         let _ = File::create(dir.join("article.txt"));
+
+        let _ = File::create(dir.join("invalid"));
+        let _ = File::create(dir.join("empty.bib"));
+        // TODO: fill this BibTeX file with a correct bibliographic entry
+        let _ = File::create(dir.join("book.bib"));
 
         #[cfg(target_family = "windows")]
         let _ = std::os::windows::fs::symlink_file(

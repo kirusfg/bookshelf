@@ -1,7 +1,8 @@
 use super::tag::Tag;
 
+use biblatex::{Bibliography, Entry as BibEntry};
 use serde::{Deserialize, Serialize};
-use std::{hash::Hash, path::PathBuf};
+use std::{fs::read_to_string, hash::Hash, path::PathBuf};
 
 /// [`Entry`] is any file that can be contained in your bookshelf.
 ///
@@ -15,6 +16,9 @@ pub struct Entry {
     pub path: PathBuf,
     /// Path to an optional bibliography entry in BibTeX format
     pub bib_path: Option<PathBuf>,
+    #[serde(skip)]
+    /// Bibliographical entry (from the BibTeX file)
+    pub bib_entry: Option<BibEntry>,
     /// Optional list of tags
     pub tags: Option<Vec<Tag>>,
 }
@@ -51,7 +55,7 @@ impl Entry {
 
         match path.canonicalize() {
             Ok(full_path) => path = full_path,
-            Err(_) => panic!("The file {:?} does not exist!", path),
+            Err(_) => panic!("The file provided does not exist"),
         }
 
         Entry {
@@ -67,16 +71,39 @@ impl Entry {
     /// This function panics if the path to a BibTeX file provided is invalid
     /// (either the file does not exists, or it has a wrong extension).
     pub fn with_bib(mut self, bib_path: PathBuf) -> Self {
+        // Checking that the file exists
         if !bib_path.exists() {
             panic!("The file {:?} does not exist!", bib_path);
         }
 
+        // Checking that the file has a .bib extension
         let ext = bib_path.extension();
         if ext.is_none() || ext.unwrap().to_str().unwrap() != "bib" {
-            panic!("The file {:?} is not a BibTeX file!", bib_path);
+            println!("{:?}", ext);
+            panic!("The file provided is not a BibTeX file");
         }
 
-        self.bib_path = Some(bib_path);
+        self.bib_path = Some(bib_path.clone());
+
+        // Parsing the file and saving the bibliographical entry
+        let bib_str = read_to_string(bib_path.clone()).unwrap_or_else(|e| {
+            panic!("Failed to read the contents of the file: {}", e)
+        });
+
+        let bibliography = Bibliography::parse(&bib_str).unwrap_or_else(|e| {
+            panic!("Failed to parse the bibliographic string: {}", e)
+        });
+
+        let cite_key = bib_path
+            .file_stem()
+            .unwrap_or_else(|| panic!("Failed to extract the cite key"));
+        let cite_key = cite_key.to_str().unwrap();
+
+        let bib_entry = bibliography.get(cite_key).unwrap_or_else(|| {
+            panic!("Failed to get the bibliographic entry: invalid cite key")
+        });
+
+        self.bib_entry = Some(bib_entry.clone());
 
         self
     }
@@ -106,7 +133,7 @@ mod tests {
     use crate::{entry::*, test_utils::setup};
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "The file provided does not exist")]
     fn file_does_not_exist() {
         let dir = setup();
         let _ = Entry::new(dir.join("non_existent.pdf").to_str().unwrap());
@@ -120,6 +147,24 @@ mod tests {
             .with_tags(&[Tag::new("fiction")]);
 
         assert!(entry1 == entry2);
+    }
+
+    #[test]
+    #[should_panic(expected = "The file provided is not a BibTeX file")]
+    fn not_a_bib_file() {
+        let dir = setup();
+        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
+            .with_bib(dir.join("invalid"));
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Failed to get the bibliographic entry: invalid cite key"
+    )]
+    fn empty_bib_file() {
+        let dir = setup();
+        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
+            .with_bib(dir.join("empty.bib"));
     }
 
     #[test]
