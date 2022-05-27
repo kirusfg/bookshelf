@@ -130,18 +130,22 @@ impl Entry {
 
 #[cfg(test)]
 mod tests {
+    use biblatex::{ChunksExt, EntryType};
+
     use crate::{entry::*, test_utils::setup};
 
     #[test]
     #[should_panic(expected = "The file provided does not exist")]
     fn file_does_not_exist() {
         let dir = setup();
+
         let _ = Entry::new(dir.join("non_existent.pdf").to_str().unwrap());
     }
 
     #[test]
     fn two_symlinks_same_file() {
         let dir = setup();
+
         let entry1 = Entry::new(dir.join("link1.txt").to_str().unwrap());
         let entry2 = Entry::new(dir.join("link2.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction")]);
@@ -153,6 +157,7 @@ mod tests {
     #[should_panic(expected = "The file provided is not a BibTeX file")]
     fn not_a_bib_file() {
         let dir = setup();
+
         let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
             .with_bib(dir.join("invalid"));
     }
@@ -163,14 +168,28 @@ mod tests {
     )]
     fn empty_bib_file() {
         let dir = setup();
+
         let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
             .with_bib(dir.join("empty.bib"));
+    }
+
+    #[test]
+    fn correct_bib_file() {
+        let dir = setup();
+
+        let book = Entry::new(dir.join("book.txt").to_str().unwrap())
+            .with_bib(dir.join("book.bib"));
+        let bib_entry = book.bib_entry.unwrap();
+
+        assert_eq!(bib_entry.entry_type, EntryType::Book);
+        assert_eq!(bib_entry.title().unwrap().format_verbatim(), "A Good Book");
     }
 
     #[test]
     #[should_panic]
     fn duplicate_tags() {
         let dir = setup();
+
         let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction"), Tag::new("fiction")]);
     }
