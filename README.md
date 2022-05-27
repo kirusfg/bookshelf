@@ -15,8 +15,11 @@ Features planned:
 - [ ] Link a summary/note file of any convenient format (Markdown, TeX, plaintext, etc.)
 - [ ] Sort books by tags, date last read, rating, etc.
 - [ ] Organize entries by tags into actual structures locally (directories)
+- [ ] Track amount read, frequency of reading
+- [ ] Track speedreading progress?
+- [ ] Synchronize between devices?
 
 ### CLI & TUI
-- [ ] Browsing through your bookshelf and opening the files using a reader of choice
-- [ ] Adding new entries and tags interactively
-- [ ] Retrieving BibTeX references (clipboard)
+- [ ] Browse through your bookshelf and opening the files using a reader of choice
+- [ ] Add new entries and tags interactively
+- [ ] Retrieve BibTeX references (clipboard)
