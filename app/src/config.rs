@@ -58,7 +58,9 @@ impl Config {
     /// the environment has failed.
     pub fn get() -> Result<Self, ConfigError> {
         AppConfig::builder()
-            .add_source(ConfigFile::from(Self::default_config_dir()))
+            .add_source(ConfigFile::from(
+                Self::default_config_dir().join("config.toml"),
+            ))
             .add_source(Environment::with_prefix("BOOKSHELF"))
             .build()
             .unwrap()
