@@ -7,4 +7,9 @@ author = "Kirill Kirillov kirusfg@gmail.com"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+lib = { path = "../lib/" }
 clap = { version = "3.1.18", features = ["cargo"] }
+serde = { version = "1.0.137", features = ["derive"] }
+toml = "0.5.9"
+config = "0.13.1"
+directories = "4.0.1"
