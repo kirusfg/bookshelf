@@ -103,10 +103,11 @@ mod tests {
     fn no_duplicate_tags() {
         let dir = setup();
 
-        let entry1 = Entry::new(dir.join("book.txt").to_str().unwrap())
+        let entry1 = Entry::new(dir.path().join("book.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction")]);
-        let entry2 = Entry::new(dir.join("another_book.txt").to_str().unwrap())
-            .with_tags(&[Tag::new("fiction"), Tag::new("classics")]);
+        let entry2 =
+            Entry::new(dir.path().join("another_book.txt").to_str().unwrap())
+                .with_tags(&[Tag::new("fiction"), Tag::new("classics")]);
 
         let mut shelf = Shelf::default();
 

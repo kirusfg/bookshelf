@@ -140,15 +140,16 @@ mod tests {
     fn file_does_not_exist() {
         let dir = setup();
 
-        let _ = Entry::new(dir.join("non_existent.pdf").to_str().unwrap());
+        let _ =
+            Entry::new(dir.path().join("non_existent.pdf").to_str().unwrap());
     }
 
     #[test]
     fn two_symlinks_same_file() {
         let dir = setup();
 
-        let entry1 = Entry::new(dir.join("link1.txt").to_str().unwrap());
-        let entry2 = Entry::new(dir.join("link2.txt").to_str().unwrap())
+        let entry1 = Entry::new(dir.path().join("link1.txt").to_str().unwrap());
+        let entry2 = Entry::new(dir.path().join("link2.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction")]);
 
         assert!(entry1 == entry2);
@@ -159,8 +160,8 @@ mod tests {
     fn not_a_bib_file() {
         let dir = setup();
 
-        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
-            .with_bib(dir.join("invalid"));
+        let _ = Entry::new(dir.path().join("book.txt").to_str().unwrap())
+            .with_bib(dir.path().join("invalid").to_str().unwrap());
     }
 
     #[test]
@@ -170,16 +171,16 @@ mod tests {
     fn empty_bib_file() {
         let dir = setup();
 
-        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
-            .with_bib(dir.join("empty.bib"));
+        let _ = Entry::new(dir.path().join("book.txt").to_str().unwrap())
+            .with_bib(dir.path().join("empty.bib").to_str().unwrap());
     }
 
     #[test]
     fn correct_bib_file() {
         let dir = setup();
 
-        let book = Entry::new(dir.join("book.txt").to_str().unwrap())
-            .with_bib(dir.join("book.bib"));
+        let book = Entry::new(dir.path().join("book.txt").to_str().unwrap())
+            .with_bib(dir.path().join("book.bib").to_str().unwrap());
         let bib_entry = book.bib_entry.unwrap();
 
         assert_eq!(bib_entry.entry_type, EntryType::Book);
@@ -191,7 +192,7 @@ mod tests {
     fn duplicate_tags() {
         let dir = setup();
 
-        let _ = Entry::new(dir.join("book.txt").to_str().unwrap())
+        let _ = Entry::new(dir.path().join("book.txt").to_str().unwrap())
             .with_tags(&[Tag::new("fiction"), Tag::new("fiction")]);
     }
 }
