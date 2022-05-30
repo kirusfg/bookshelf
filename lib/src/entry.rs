@@ -70,16 +70,17 @@ impl Entry {
     ///
     /// This function panics if the path to a BibTeX file provided is invalid
     /// (either the file does not exists, or it has a wrong extension).
-    pub fn with_bib(mut self, bib_path: PathBuf) -> Self {
-        // Checking that the file exists
-        if !bib_path.exists() {
-            panic!("The file {:?} does not exist!", bib_path);
+    pub fn with_bib(mut self, bib_path: &str) -> Self {
+        let mut bib_path = PathBuf::from(bib_path);
+
+        match bib_path.canonicalize() {
+            Ok(full_path) => bib_path = full_path,
+            Err(_) => panic!("The file provided does not exist"),
         }
 
         // Checking that the file has a .bib extension
         let ext = bib_path.extension();
         if ext.is_none() || ext.unwrap().to_str().unwrap() != "bib" {
-            println!("{:?}", ext);
             panic!("The file provided is not a BibTeX file");
         }
 

@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use clap::ArgMatches;
 
 use lib::{entry::Entry, shelf::Shelf};
@@ -12,7 +10,7 @@ fn add_entry(matches: &ArgMatches, config: Config, mut shelf: Shelf) {
     let mut entry = Entry::new(file_path.to_str().unwrap());
 
     if let Some(bib_path) = matches.value_of_os("bib") {
-        entry = entry.with_bib(PathBuf::from(bib_path));
+        entry = entry.with_bib(bib_path.to_str().unwrap());
     }
 
     shelf.add(entry);
