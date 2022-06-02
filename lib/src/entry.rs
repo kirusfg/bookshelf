@@ -133,7 +133,9 @@ impl Entry {
 mod tests {
     use biblatex::{ChunksExt, EntryType};
 
-    use crate::{entry::*, test_utils::setup};
+    use utils::test::setup;
+
+    use crate::entry::*;
 
     #[test]
     #[should_panic(expected = "The file provided does not exist")]

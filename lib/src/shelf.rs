@@ -97,7 +97,9 @@ impl Shelf {
 
 #[cfg(test)]
 mod tests {
-    use crate::{entry::*, shelf::*, tag::*, test_utils::*};
+    use utils::test::setup;
+
+    use crate::{entry::*, shelf::*, tag::*};
 
     #[test]
     fn no_duplicate_tags() {

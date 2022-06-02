@@ -13,3 +13,6 @@ serde = { version = "1.0.137", features = ["derive"] }
 toml = "0.5.9"
 config = "0.13.1"
 directories = "4.0.1"
+
+[dev-dependencies]
+utils = { path = "../utils/" }
