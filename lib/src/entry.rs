@@ -16,9 +16,6 @@ pub struct Entry {
     pub path: PathBuf,
     /// Path to an optional bibliography entry in BibTeX format
     pub bib_path: Option<PathBuf>,
-    #[serde(skip)]
-    /// Bibliographical entry (from the BibTeX file)
-    pub bib_entry: Option<BibEntry>,
     /// Optional list of tags
     pub tags: Option<Vec<Tag>>,
 }
@@ -86,26 +83,6 @@ impl Entry {
 
         self.bib_path = Some(bib_path.clone());
 
-        // Parsing the file and saving the bibliographical entry
-        let bib_str = read_to_string(bib_path.clone()).unwrap_or_else(|e| {
-            panic!("Failed to read the contents of the file: {}", e)
-        });
-
-        let bibliography = Bibliography::parse(&bib_str).unwrap_or_else(|e| {
-            panic!("Failed to parse the bibliographic string: {}", e)
-        });
-
-        let cite_key = bib_path
-            .file_stem()
-            .unwrap_or_else(|| panic!("Failed to extract the cite key"));
-        let cite_key = cite_key.to_str().unwrap();
-
-        let bib_entry = bibliography.get(cite_key).unwrap_or_else(|| {
-            panic!("Failed to get the bibliographic entry: invalid cite key")
-        });
-
-        self.bib_entry = Some(bib_entry.clone());
-
         self
     }
 
@@ -126,6 +103,39 @@ impl Entry {
         self.tags = Some(tags_vec);
 
         self
+    }
+
+    /// Returns the BibTeX metadata for this [`Entry`], and None if
+    /// the bib_path is None.
+    ///
+    /// # Panics
+    ///
+    /// Panics if accessing or parsing the BibTeX file has failed.
+    pub fn get_bib_entry(&self) -> Option<BibEntry> {
+        // Check if the entry has a BibTeX file associated with it
+        self.bib_path.as_ref()?;
+
+        let bib_path = self.bib_path.clone().unwrap();
+
+        // Parsing the file and saving the bibliographical entry
+        let bib_str = read_to_string(bib_path.clone()).unwrap_or_else(|e| {
+            panic!("Failed to read the contents of the file: {}", e)
+        });
+
+        let bibliography = Bibliography::parse(&bib_str).unwrap_or_else(|e| {
+            panic!("Failed to parse the bibliographic string: {}", e)
+        });
+
+        let cite_key = bib_path
+            .file_stem()
+            .unwrap_or_else(|| panic!("Failed to extract the cite key"));
+        let cite_key = cite_key.to_str().unwrap();
+
+        let bib_entry = bibliography.get(cite_key).unwrap_or_else(|| {
+            panic!("Failed to get the bibliographic entry: invalid cite key")
+        });
+
+        Some(bib_entry.clone())
     }
 }
 
@@ -173,8 +183,9 @@ mod tests {
     fn empty_bib_file() {
         let dir = setup();
 
-        let _ = Entry::new(dir.path().join("book.txt").to_str().unwrap())
+        let book = Entry::new(dir.path().join("book.txt").to_str().unwrap())
             .with_bib(dir.path().join("empty.bib").to_str().unwrap());
+        let _bib_entry = book.get_bib_entry().unwrap();
     }
 
     #[test]
@@ -183,7 +194,7 @@ mod tests {
 
         let book = Entry::new(dir.path().join("book.txt").to_str().unwrap())
             .with_bib(dir.path().join("book.bib").to_str().unwrap());
-        let bib_entry = book.bib_entry.unwrap();
+        let bib_entry = book.get_bib_entry().unwrap();
 
         assert_eq!(bib_entry.entry_type, EntryType::Book);
         assert_eq!(bib_entry.title().unwrap().format_verbatim(), "A Good Book");
