@@ -64,7 +64,7 @@ impl Entry {
         }
     }
 
-    /// Links a BibTeX bibliography to the entry.
+    /// Links a BibTeX bibliography to this [`Entry`].
     ///
     /// # Panics
     ///
@@ -109,7 +109,7 @@ impl Entry {
         self
     }
 
-    /// Adds optional tags to the entry.
+    /// Adds optional tags to this [`Entry`].
     ///
     /// # Panics
     ///
