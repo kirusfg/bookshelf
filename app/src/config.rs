@@ -3,6 +3,7 @@ use config::{
 };
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+use shellexpand::tilde;
 use std::{
     fs::{create_dir_all, File},
     io::Write,
@@ -14,7 +15,7 @@ use toml::to_vec;
 #[derive(Deserialize, Serialize)]
 pub struct Config {
     /// The path to a file for the Shelf to be saved to.
-    pub db: PathBuf,
+    db: PathBuf,
 }
 
 impl Default for Config {
@@ -96,6 +97,15 @@ impl Config {
     /// Returns whether the config folder and config.toml exist.
     pub fn exists() -> bool {
         Self::default_config_dir().join("config.toml").exists()
+    }
+
+    /// Returns the path to db file from config.toml. Expands `~` to $HOME.
+    pub fn db(&self) -> PathBuf {
+        // Expand possible `~` in the path
+        let path = &self.db.to_str().unwrap();
+        let path = tilde(path);
+
+        PathBuf::from(path.into_owned())
     }
 }
 

@@ -23,7 +23,7 @@ impl App {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let config = Config::get_or_default()?;
 
-        let shelf = Shelf::open(config.db.clone())?;
+        let shelf = Shelf::open(config.db())?;
 
         let cli_commands = Command::new(crate_name!())
             .about(crate_description!())
@@ -73,13 +73,13 @@ impl App {
         self.shelf.add(entry);
 
         let file_path = file_path.to_str().unwrap();
-        match self.shelf.save(self.config.db) {
+        match self.shelf.save(self.config.db()) {
             Ok(()) => println!("Successfully added {}", file_path),
             Err(e) => println!("Couldn't add {}: {}", file_path, e),
         }
     }
 
-    fn list_entries(self, matches: &ArgMatches) {
+    fn list_entries(self, _matches: &ArgMatches) {
         for entry in self.shelf.entries.iter() {
             let bib_entry = entry.get_bib_entry();
             let path = entry.path.to_str().unwrap();
