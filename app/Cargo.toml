@@ -14,7 +14,7 @@ toml = "0.5.9"
 config = "0.13.1"
 directories = "4.0.1"
 biblatex = "0.6.2"
-open = "2.1.3"
+open = { git = "https://github.com/kirusfg/open-rs", branch = "main" }
 
 [dev-dependencies]
 utils = { path = "../utils/" }
