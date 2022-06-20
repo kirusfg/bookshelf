@@ -9,7 +9,7 @@ use clap::{
 use lib::{entry::Entry, shelf::Shelf};
 
 use crate::{
-    cli::clap::{add_command, list_command, open_command},
+    cli::clap::{add_command, list_command, open_command, remove_command},
     config::Config,
 };
 
@@ -30,6 +30,7 @@ impl App {
             .version(crate_version!())
             .author(crate_authors!())
             .subcommand(add_command())
+            .subcommand(remove_command())
             .subcommand(open_command())
             .subcommand(list_command());
 
@@ -53,6 +54,7 @@ impl App {
         match matches.subcommand() {
             Some(command) => match command {
                 ("add", matches) => self.add_entry(matches),
+                ("remove", matches) => self.remove_entry(matches),
                 ("list", matches) => self.list_entries(matches),
                 ("open", matches) => self.open_entry(matches),
                 (_, &_) => todo!(),
@@ -79,6 +81,29 @@ impl App {
         }
     }
 
+    fn remove_entry(mut self, matches: &ArgMatches) {
+        let entry_id = matches.value_of("INDEX").unwrap();
+        let entry_id = String::from(entry_id).parse::<usize>().unwrap();
+
+        let entry = self.shelf.entries.get_index(entry_id);
+
+        if entry.is_none() {
+            panic!("Couldn't open entry {}: no such entry", entry_id);
+        }
+
+        let entry_name = format!(
+            "{} - {}",
+            entry_id,
+            entry.unwrap().clone().path.to_str().unwrap()
+        );
+
+        self.shelf.remove_index(entry_id);
+
+        match self.shelf.save(self.config.db()) {
+            Ok(()) => println!("Successfully removed {}", entry_name),
+            Err(e) => println!("Couldn't remove {}: {}", entry_name, e),
+        }
+    }
 
     fn list_entries(self, _matches: &ArgMatches) {
         for (id, entry) in self.shelf.entries.iter().enumerate() {

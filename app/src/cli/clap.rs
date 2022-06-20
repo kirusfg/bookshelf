@@ -11,6 +11,12 @@ pub(crate) fn add_command() -> Command<'static> {
         )
 }
 
+pub(crate) fn remove_command() -> Command<'static> {
+    Command::new("remove")
+        .about("Removes an entry from your bookshelf (by its index)")
+        .arg(arg!(<INDEX>).required(true))
+}
+
 pub(crate) fn list_command() -> Command<'static> {
     Command::new("list")
         .about("List all of the entries on your bookshelf")
