@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Kirill Kirillov <kirusfg@gmail.com>"]
 
 [dependencies]
+indexmap = { version = "1.9.0", features = ["serde"] }
 bincode = "1.3.3"
 biblatex = "0.6.2"
 serde = { version = "1.0.137", features = ["derive"] }

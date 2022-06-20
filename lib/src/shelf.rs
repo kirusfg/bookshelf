@@ -1,6 +1,7 @@
 use super::{entry::Entry, tag::Tag};
 
 use bincode::{deserialize, serialize};
+use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
@@ -16,14 +17,16 @@ use std::{
 #[derive(Default, Deserialize, Serialize)]
 pub struct Shelf {
     /// Items on a shelf
-    pub entries: HashSet<Entry>,
+    pub entries: IndexSet<Entry>,
     /// All tags associated with entries
     pub tags: HashSet<Tag>,
 }
 
 impl Shelf {
-    /// Adds a new [`Entry`] and its tags to the shelf if those were not present
-    /// before.
+    /// Adds a new [`Entry`] and its tags to the shelf if those were not
+    /// present before. The referenced values are copied. The entries are
+    /// stored internally in the order of insertion, and this order is
+    /// preserved on removal from the shelf.
     ///
     /// # Returns
     ///
@@ -35,26 +38,48 @@ impl Shelf {
     /// Panics if the Entry has an invalid path. The PartialEq implementation
     /// for Entry converts the paths to their canonical form, and if the path
     /// does not exist, program crashes.
-    pub fn add(&mut self, entry: Entry) -> bool {
+    pub fn add(&mut self, entry: &Entry) -> bool {
         let is_new = self.entries.insert(entry.clone());
 
         if is_new && entry.tags.is_some() {
-            for tag in entry.tags.unwrap().into_iter() {
-                self.tags.insert(tag);
+            for tag in entry.tags.as_ref().unwrap().iter() {
+                self.tags.insert(tag.clone());
             }
         }
 
         is_new
     }
 
-    /// Removes the given [`Entry`] from the shelf.
+    /// Removes the given [`Entry`] from the shelf. Preserves the relative
+    /// order of the entries.
     ///
     /// # Returns
     ///
     /// Returns true if the entry was in the shelf before and it was removed,
     /// false otherwise.
-    pub fn remove(&mut self, entry: Entry) -> bool {
-        self.entries.remove(&entry)
+    pub fn remove(&mut self, entry: &Entry) -> bool {
+        self.entries.shift_remove(entry)
+    }
+
+    /// Retrieves an [`Entry`] by its **1-based** index in the set.
+    ///
+    /// # Returns
+    ///
+    /// Returns a reference to the [`Entry`] at the (index - 1)th position in
+    /// the shelf if the entry is present, and None otherwise.
+    pub fn get_index(&self, index: usize) -> Option<&Entry> {
+        self.entries.get_index(index - 1)
+    }
+
+    /// Removes an [`Entry`] by its **1-based** index in the set.
+    /// Preserves the relative order of the entries.
+    ///
+    /// # Returns
+    ///
+    /// Returns true if the entry was in the shelf before and it was removed,
+    /// false otherwise.
+    pub fn remove_index(&mut self, index: usize) -> bool {
+        self.entries.shift_remove_index(index - 1).is_some()
     }
 
     /// Serializes the [`Shelf`] into a file in binary format.
@@ -119,8 +144,8 @@ mod tests {
 
         let mut shelf = Shelf::default();
 
-        shelf.add(entry1);
-        shelf.add(entry2);
+        shelf.add(&entry1);
+        shelf.add(&entry2);
 
         assert_eq!(shelf.tags.len(), 2);
 

@@ -70,7 +70,7 @@ impl App {
             entry = entry.with_bib(bib_path.to_str().unwrap());
         }
 
-        self.shelf.add(entry);
+        self.shelf.add(&entry);
 
         let file_path = file_path.to_str().unwrap();
         match self.shelf.save(self.config.db()) {
@@ -79,41 +79,47 @@ impl App {
         }
     }
 
+
     fn list_entries(self, _matches: &ArgMatches) {
-        for entry in self.shelf.entries.iter() {
+        for (id, entry) in self.shelf.entries.iter().enumerate() {
             let bib_entry = entry.get_bib_entry();
-            let path = entry.path.to_str().unwrap();
+            let path = entry.path.file_name().unwrap().to_str().unwrap();
 
             if bib_entry.is_some() {
                 println!(
-                    "{}",
+                    "{} - {}",
+                    id + 1,
                     bib_entry.unwrap().title().unwrap().format_verbatim()
                 );
             } else {
-                println!("{}", path);
+                println!("{} - {}", id + 1, path);
             }
         }
     }
 
     fn open_entry(self, matches: &ArgMatches) {
-        let entry_path = matches.value_of_os("ENTRY").unwrap();
-        let entry = self
-            .shelf
-            .entries
-            .iter()
-            .find(|entry| entry.path == entry_path);
+        let entry_id = matches.value_of_os("ENTRY").unwrap();
+        let entry_id = String::from(entry_id.to_str().unwrap())
+            .parse::<usize>()
+            .unwrap();
 
-        let entry_path = entry_path.to_str().unwrap();
+        let entry = self.shelf.get_index(entry_id);
 
         if entry.is_none() {
-            println!("Couldn't open {}: no such entry", entry_path);
+            panic!("Couldn't open entry {}: no such entry", entry_id);
         }
 
         let result = open::that(entry.unwrap().path.clone());
 
+        let entry_name = format!(
+            "{} - {}",
+            entry_id + 1,
+            entry.unwrap().path.to_str().unwrap()
+        );
+
         match result {
-            Ok(()) => println!("Successfully opened {}", entry_path),
-            Err(e) => println!("Couldn't open {}: {}", entry_path, e),
+            Ok(()) => println!("Successfully opened {}", entry_name),
+            Err(e) => println!("Couldn't open {}: {}", entry_name, e),
         }
     }
 }
