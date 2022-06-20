@@ -7,7 +7,7 @@ use std::{
     error::Error,
     fs::File,
     io::{Read, Write},
-    path::PathBuf,
+    path::Path,
 };
 
 /// A storage for entries, which can be books, articles, etc.
@@ -67,7 +67,10 @@ impl Shelf {
     ///
     /// This function will return an error if creating or writing to the file
     /// fails.
-    pub fn save(&self, file: PathBuf) -> Result<(), std::io::Error> {
+    pub fn save<P>(&self, file: P) -> Result<(), std::io::Error>
+    where
+        P: AsRef<Path>,
+    {
         let binary_data = serialize(&self).unwrap();
 
         let mut db_file = File::create(file)?;
@@ -83,7 +86,10 @@ impl Shelf {
     /// # Errors
     ///
     /// This function will return an error if reading from the file fails.
-    pub fn open(file: PathBuf) -> Result<Shelf, Box<dyn Error>> {
+    pub fn open<P>(file: P) -> Result<Shelf, Box<dyn Error>>
+    where
+        P: AsRef<Path>,
+    {
         let mut binary_data = Vec::new();
 
         let mut db_file = File::open(file).unwrap();
