@@ -26,9 +26,12 @@ pub(crate) fn list_command() -> Command<'static> {
 pub(crate) fn open_command() -> Command<'static> {
     Command::new("open")
         .about("Opens an entry in an external viewer")
-        .arg(arg!(<ENTRY>).required(true).allow_invalid_utf8(true))
         .arg(
-            arg!(-e --exec <PATH> "Sets a path to the executable to use")
+            arg!(<INDEX> "Numerical index of the entry in the bookshelf")
+                .required(true),
+        )
+        .arg(
+            arg!(-e --exec <EXE> "Sets the executable to use")
                 .required(false)
                 .allow_invalid_utf8(true),
         )
