@@ -1,5 +1,6 @@
 [package]
 name = "bookshelf"
+description = "Your personal bookshelf and a bit more"
 version = "0.1.0"
 edition = "2021"
 authors = ["Kirill Kirillov <kirusfg@gmail.com>"]

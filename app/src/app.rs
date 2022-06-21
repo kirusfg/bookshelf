@@ -1,9 +1,6 @@
 use std::error::Error;
 
-use clap::{
-    crate_authors, crate_description, crate_name, crate_version, ArgMatches,
-    Command,
-};
+use clap::{crate_description, crate_name, crate_version, ArgMatches, Command};
 
 use lib::{entry::Entry, shelf::Shelf};
 
@@ -33,7 +30,6 @@ impl App {
         let cli_commands = Command::new(crate_name!())
             .about(crate_description!())
             .version(crate_version!())
-            .author(crate_authors!())
             .subcommand(add_command())
             .subcommand(remove_command())
             .subcommand(open_command())
