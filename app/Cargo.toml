@@ -17,6 +17,8 @@ directories = "4.0.1"
 biblatex = "0.6.2"
 shellexpand = "2.1.0"
 open = { git = "https://github.com/kirusfg/open-rs", branch = "main" }
+tui = "0.18"
+crossterm = "0.23"
 
 [dev-dependencies]
 utils = { path = "../utils/" }
