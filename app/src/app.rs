@@ -1,12 +1,24 @@
-use std::error::Error;
+use std::{
+    error::Error,
+    io::{self, stdout},
+    thread,
+    time::Duration,
+};
 
 use clap::{crate_description, crate_name, crate_version, ArgMatches, Command};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use tui::{
+    backend::CrosstermBackend,
+    widgets::{Block, Borders},
+    Terminal,
+};
 
 use lib::{entry::Entry, shelf::Shelf};
 
 use crate::{
     cli::clap::{add_command, list_command, open_command, remove_command},
     config::Config,
+    tui::{draw, setup_terminal, shutdown},
     utils::format::format_entry,
 };
 
@@ -48,7 +60,7 @@ impl App {
 
         match matches.args_present() || matches.subcommand().is_some() {
             true => self.run_command(&matches), // CLI
-            false => todo!(),                   // TUI
+            false => self.run_tui(),            // TUI
         }
     }
 
@@ -156,5 +168,14 @@ impl App {
             let entry_name = format_entry(i + 1, entry);
             println!("{}", entry_name);
         }
+    }
+
+    /// Runs the bookshelf TUI
+    fn run_tui(&self) {
+        let mut terminal = setup_terminal().unwrap();
+
+        draw(&mut terminal).unwrap();
+
+        shutdown();
     }
 }

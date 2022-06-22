@@ -1,6 +1,7 @@
 mod app;
 mod cli;
 mod config;
+mod tui;
 mod utils;
 
 use std::error::Error;
