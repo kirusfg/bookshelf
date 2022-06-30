@@ -5,15 +5,29 @@ use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
-    error::Error,
     fs::File,
     io::{Read, Write},
     path::Path,
 };
 
-/// A storage for entries, which can be books, articles, etc.
+/// Errors associated with [`Shelf`] operations.
+pub enum Error {
+    /// The file at the path specified does not exist.
+    NoSuchFile,
+    /// The entry specified is already on the [`Shelf`].
+    DuplicateEntry,
+    /// The entry requested is not on the [`Shelf`].
+    NoSuchEntry,
+    /// Writing the [`Shelf`] to the file specified failed.
+    Write,
+    /// Writing the [`Shelf`] from the file specified failed.
+    Read,
+}
+
+/// A storage for entries, which can be books, articles, etc., as well as
+/// the tags that those entries have.
 ///
-/// Can be saved to a file specified as 'db' in the config file.
+/// Can be saved to/read from a file (in binary format).
 #[derive(Default, Deserialize, Serialize)]
 pub struct Shelf {
     /// Items on a shelf
@@ -28,99 +42,102 @@ impl Shelf {
     /// stored internally in the order of insertion, and this order is
     /// preserved on removal from the shelf.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// Returns true if the entry was not on the shelf before, and false
-    /// otherwise.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the Entry has an invalid path. The PartialEq implementation
-    /// for Entry converts the paths to their canonical form, and if the path
-    /// does not exist, program crashes.
-    pub fn add(&mut self, entry: &Entry) -> bool {
-        let is_new = self.entries.insert(entry.clone());
+    /// This function will return an error if the [`Entry`] provided already
+    /// existed on the [`Shelf`]
+    /// the index provided on the [`Shelf`].
+    pub fn add(&mut self, entry: &Entry) -> Result<(), Error> {
+        match self.entries.insert(entry.clone()) {
+            true => {
+                if entry.tags.is_some() {
+                    for tag in entry.tags.as_ref().unwrap().iter() {
+                        self.tags.insert(tag.clone());
+                    }
+                }
 
-        if is_new && entry.tags.is_some() {
-            for tag in entry.tags.as_ref().unwrap().iter() {
-                self.tags.insert(tag.clone());
+                Ok(())
             }
+            false => Err(Error::DuplicateEntry),
         }
-
-        is_new
     }
 
     /// Removes the given [`Entry`] from the shelf. Preserves the relative
     /// order of the entries.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// Returns true if the entry was in the shelf before and it was removed,
-    /// false otherwise.
-    pub fn remove(&mut self, entry: &Entry) -> bool {
-        self.entries.shift_remove(entry)
+    /// This function will return an error if there wasn't an [`Entry`] with
+    /// the index provided on the [`Shelf`].
+    pub fn remove(&mut self, entry: &Entry) -> Result<(), Error> {
+        match self.entries.shift_remove(entry) {
+            true => Ok(()),
+            false => Err(Error::NoSuchEntry),
+        }
     }
 
-    /// Retrieves an [`Entry`] by its **1-based** index in the set.
+    /// Retrieves a reference to an [`Entry`] by its **1-based** index.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// Returns a reference to the [`Entry`] at the (index - 1)th position in
-    /// the shelf if the entry is present, and None otherwise.
-    pub fn get_index(&self, index: usize) -> Option<&Entry> {
-        self.entries.get_index(index - 1)
+    /// This function will return an error if there wasn't an [`Entry`] with
+    /// the index provided on the [`Shelf`].
+    pub fn get_index(&self, index: usize) -> Result<&Entry, Error> {
+        match self.entries.get_index(index - 1) {
+            Some(entry) => Ok(entry),
+            None => Err(Error::NoSuchEntry),
+        }
     }
 
-    /// Removes an [`Entry`] by its **1-based** index in the set.
-    /// Preserves the relative order of the entries.
+    /// Removes an [`Entry`] by its **1-based** index on the [`Shelf`].
+    /// Preserves the relative order of the entries (insertion order).
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// Returns true if the entry was in the shelf before and it was removed,
-    /// false otherwise.
-    pub fn remove_index(&mut self, index: usize) -> bool {
-        self.entries.shift_remove_index(index - 1).is_some()
+    /// This function will return an error if there wasn't an [`Entry`] with
+    /// the index provided on the [`Shelf`].
+    pub fn remove_index(&mut self, index: usize) -> Result<(), Error> {
+        match self.entries.shift_remove_index(index - 1) {
+            Some(_) => Ok(()),
+            None => Err(Error::NoSuchEntry),
+        }
     }
 
     /// Serializes the [`Shelf`] into a file in binary format.
     ///
-    /// # Panics
-    ///
-    /// Panics if serializing the shelf into binary fails.
-    ///
     /// # Errors
     ///
-    /// This function will return an error if creating or writing to the file
-    /// fails.
-    pub fn save<P>(&self, file: P) -> Result<(), std::io::Error>
+    /// This function will return an error if writing to the file fails,
+    /// which can happen when creating the file, serializing the [`Shelf`],
+    /// or writing the serialized data to the file.
+    pub fn save<P>(&self, file: P) -> Result<(), Error>
     where
         P: AsRef<Path>,
     {
-        let binary_data = serialize(&self).unwrap();
+        let mut db_file = File::create(file).map_err(|_| Error::Write)?;
 
-        let mut db_file = File::create(file)?;
-        db_file.write_all(&binary_data)
+        let binary_data = serialize(&self).map_err(|_| Error::Write)?;
+        db_file.write_all(&binary_data).map_err(|_| Error::Write)
     }
 
     /// Reads a [`Shelf`] from a file in binary format.
     ///
-    /// # Panics
-    ///
-    /// Panics if deserializing the shelf from binary fails.
-    ///
     /// # Errors
     ///
-    /// This function will return an error if reading from the file fails.
-    pub fn open<P>(file: P) -> Result<Shelf, Box<dyn Error>>
+    /// This function will return an error if reading from the file fails,
+    /// which can happen due to file not existing or due to a failure reading
+    /// and deserializing its contents.
+    pub fn open<P>(file: P) -> Result<Shelf, Error>
     where
         P: AsRef<Path>,
     {
+        let mut db_file = File::open(file).map_err(|_| Error::Read)?;
+
         let mut binary_data = Vec::new();
-
-        let mut db_file = File::open(file).unwrap();
-        db_file.read_to_end(&mut binary_data)?;
-
-        let shelf = deserialize(&binary_data).unwrap();
+        db_file
+            .read_to_end(&mut binary_data)
+            .map_err(|_| Error::Read)?;
+        let shelf = deserialize(&binary_data).map_err(|_| Error::Read)?;
 
         Ok(shelf)
     }
@@ -144,8 +161,8 @@ mod tests {
 
         let mut shelf = Shelf::default();
 
-        shelf.add(&entry1);
-        shelf.add(&entry2);
+        assert!(shelf.add(&entry1).is_ok());
+        assert!(shelf.add(&entry2).is_ok());
 
         assert_eq!(shelf.tags.len(), 2);
 
