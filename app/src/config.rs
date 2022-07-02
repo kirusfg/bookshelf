@@ -1,5 +1,5 @@
 use config::{
-    Config as AppConfig, ConfigError, Environment, File as ConfigFile,
+    Config as AppConfig, ConfigError as Error, Environment, File as ConfigFile,
 };
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
@@ -43,7 +43,7 @@ impl Config {
     ///
     /// Returns `ConfigError` if either reading the config file or
     /// the environment has failed.
-    pub fn get_or_default() -> Result<Self, ConfigError> {
+    pub fn get_or_default() -> Result<Self, Error> {
         match Self::exists() {
             true => Self::get(),
             false => Self::init(),
@@ -57,7 +57,7 @@ impl Config {
     ///
     /// Returns `ConfigError` if either reading the config file or
     /// the environment has failed.
-    pub fn get() -> Result<Self, ConfigError> {
+    pub fn get() -> Result<Self, Error> {
         AppConfig::builder()
             .add_source(ConfigFile::from(
                 Self::default_config_dir().join("config.toml"),
@@ -75,9 +75,9 @@ impl Config {
     ///
     /// Returns an error if either config directory or file could not be
     /// created.
-    pub fn init() -> Result<Self, ConfigError> {
+    pub fn init() -> Result<Self, Error> {
         if create_dir_all(Self::default_config_dir()).is_err() {
-            return Err(ConfigError::Message(
+            return Err(Error::Message(
                 "Couldn't create the config directory".to_string(),
             ));
         }

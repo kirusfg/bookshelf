@@ -10,7 +10,7 @@ use std::{fs::read_to_string, hash::Hash, path::PathBuf};
 /// a book, an article, or a png file of a poster/infographic. This
 /// path must be unique to be stored on a shelf - no duplicates
 /// are allowed.
-#[derive(Clone, Default, Deserialize, Eq, Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Eq, Serialize)]
 pub struct Entry {
     /// Path to the entry (can be a link), must be unique
     pub path: PathBuf,
