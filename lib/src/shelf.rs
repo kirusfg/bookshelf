@@ -5,15 +5,15 @@ use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
+    fmt::{Debug, Display},
     fs::File,
     io::{Read, Write},
     path::Path,
 };
 
 /// Errors associated with [`Shelf`] operations.
+#[derive(Debug)]
 pub enum Error {
-    /// The file at the path specified does not exist.
-    NoSuchFile,
     /// The entry specified is already on the [`Shelf`].
     DuplicateEntry,
     /// The entry requested is not on the [`Shelf`].
@@ -23,6 +23,23 @@ pub enum Error {
     /// Writing the [`Shelf`] from the file specified failed.
     Read,
 }
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::DuplicateEntry => {
+                write!(f, "The entry is already on the shelf")
+            }
+            Error::NoSuchEntry => {
+                write!(f, "The requested entry is not on the shelf")
+            }
+            Error::Write => write!(f, "Writing to the database failed"),
+            Error::Read => write!(f, "Writing from the database failed"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
 
 /// A storage for entries, which can be books, articles, etc., as well as
 /// the tags that those entries have.
@@ -45,8 +62,7 @@ impl Shelf {
     /// # Errors
     ///
     /// This function will return an error if the [`Entry`] provided already
-    /// existed on the [`Shelf`]
-    /// the index provided on the [`Shelf`].
+    /// existed on the [`Shelf`].
     pub fn add(&mut self, entry: &Entry) -> Result<(), Error> {
         match self.entries.insert(entry.clone()) {
             true => {
