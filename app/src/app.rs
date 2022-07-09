@@ -1,5 +1,6 @@
 use clap::{crate_description, crate_name, crate_version, ArgMatches, Command};
 
+use crossterm::event::KeyCode;
 use lib::{entry::Entry, shelf::Shelf};
 
 use crate::{
@@ -9,7 +10,11 @@ use crate::{
         list_entries, open_entry, remove_entry,
     },
     config::Config,
-    tui::{draw, setup_terminal, shutdown},
+    tui::{
+        draw, draw_letter,
+        events::{Event, EventLoop},
+        setup_terminal, shutdown,
+    },
 };
 
 pub(crate) struct App {
@@ -107,12 +112,12 @@ impl App {
     }
 
     /// Decides whether the user is to run a CLI command or use the TUI
-    pub(crate) fn start(&mut self) {
+    pub(crate) async fn start(&mut self) {
         let matches = self.cli_commands.clone().get_matches();
 
         match matches.args_present() || matches.subcommand().is_some() {
             true => self.run_command(&matches), // CLI
-            false => self.run_tui(),            // TUI
+            false => self.run_tui().await,      // TUI
         }
     }
 
@@ -131,10 +136,46 @@ impl App {
     }
 
     /// Runs the bookshelf TUI
-    fn run_tui(&self) {
+    async fn run_tui(&self) {
         let mut terminal = setup_terminal().unwrap();
 
+        let event_loop = EventLoop::default();
+        let mut rx = event_loop.rx;
+
         draw(&mut terminal).unwrap();
+
+        loop {
+            let size = terminal.size().unwrap();
+
+            match rx.recv().await {
+                Some(Event::Tick) => {}
+                Some(Event::Input(key)) => match key {
+                    KeyCode::Backspace => todo!(),
+                    KeyCode::Enter => todo!(),
+                    KeyCode::Left => todo!(),
+                    KeyCode::Right => todo!(),
+                    KeyCode::Up => todo!(),
+                    KeyCode::Down => todo!(),
+                    KeyCode::Home => todo!(),
+                    KeyCode::End => todo!(),
+                    KeyCode::PageUp => todo!(),
+                    KeyCode::PageDown => todo!(),
+                    KeyCode::Tab => todo!(),
+                    KeyCode::BackTab => todo!(),
+                    KeyCode::Delete => todo!(),
+                    KeyCode::Insert => todo!(),
+                    KeyCode::F(_) => todo!(),
+                    KeyCode::Char(c) => draw_letter(&mut terminal, &c).unwrap(),
+                    KeyCode::Null => todo!(),
+                    KeyCode::Esc => break,
+                },
+                None => break,
+            }
+
+            if size != terminal.size().unwrap() {
+                draw(&mut terminal).unwrap();
+            }
+        }
 
         shutdown();
     }

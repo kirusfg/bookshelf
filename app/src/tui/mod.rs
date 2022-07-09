@@ -1,3 +1,5 @@
+pub(crate) mod events;
+
 use std::io::{self, stdout, Stdout};
 
 use crossterm::{
@@ -37,20 +39,28 @@ pub(crate) fn shutdown() {
 pub(crate) fn draw<B: Backend>(
     terminal: &mut Terminal<B>,
 ) -> Result<(), io::Error> {
-    loop {
-        terminal
-            .draw(|f| {
-                let size = f.size();
-                let block =
-                    Block::default().title("All entries").borders(Borders::ALL);
-                f.render_widget(block, size);
-            })
-            .unwrap();
+    terminal.draw(|f| {
+        let size = f.size();
+        let block = Block::default().title("Entries").borders(Borders::ALL);
+        f.render_widget(block, size);
+    })?;
 
-        if terminal.size().is_err() {
-            break;
-        }
-    }
+    Ok(())
+}
+
+pub(crate) fn draw_letter<B: Backend>(
+    terminal: &mut Terminal<B>,
+    letter: &char,
+) -> Result<(), io::Error> {
+    terminal
+        .draw(|f| {
+            let size = f.size();
+            let block = Block::default()
+                .title(letter.to_string())
+                .borders(Borders::ALL);
+            f.render_widget(block, size);
+        })
+        .unwrap();
 
     Ok(())
 }

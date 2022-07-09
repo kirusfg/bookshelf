@@ -6,10 +6,11 @@ mod utils;
 
 use crate::app::App;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new()?;
 
-    app.start();
+    app.start().await;
 
     Ok(())
 }

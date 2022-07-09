@@ -19,6 +19,7 @@ shellexpand = "2.1.0"
 open = { git = "https://github.com/kirusfg/open-rs", branch = "main" }
 tui = "0.18"
 crossterm = "0.23"
+tokio = { version = "1", features = ["full"] }
 
 [dev-dependencies]
 utils = { path = "../utils/" }
