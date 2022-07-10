@@ -49,10 +49,3 @@ impl EventLoop {
         Self { rx }
     }
 }
-
-impl Default for EventLoop {
-    fn default() -> Self {
-        // 120 FPS
-        Self::new(Duration::from_millis(1000 / 120))
-    }
-}

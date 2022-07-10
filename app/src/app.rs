@@ -1,16 +1,11 @@
 use clap::{ArgMatches, Command};
-use crossterm::event::KeyCode;
 
 use lib::{entry::Entry, shelf::Shelf};
 
 use crate::{
     cli::{clap::get_cli_commands, match_subcommand},
     config::Config,
-    tui::{
-        draw, draw_letter,
-        events::{Event, EventLoop},
-        setup_terminal, shutdown,
-    },
+    tui::Tui,
 };
 
 pub(crate) struct App {
@@ -118,46 +113,10 @@ impl App {
 
     /// Runs the bookshelf TUI
     async fn run_tui(&self) {
-        let mut terminal = setup_terminal().unwrap();
+        let mut tui = Tui::default();
 
-        let event_loop = EventLoop::default();
-        let mut rx = event_loop.rx;
-
-        draw(&mut terminal).unwrap();
-
-        loop {
-            let size = terminal.size().unwrap();
-
-            match rx.recv().await {
-                Some(Event::Tick) => {},
-                Some(Event::Input(key)) => match key {
-                    KeyCode::Backspace => todo!(),
-                    KeyCode::Enter => todo!(),
-                    KeyCode::Left => todo!(),
-                    KeyCode::Right => todo!(),
-                    KeyCode::Up => todo!(),
-                    KeyCode::Down => todo!(),
-                    KeyCode::Home => todo!(),
-                    KeyCode::End => todo!(),
-                    KeyCode::PageUp => todo!(),
-                    KeyCode::PageDown => todo!(),
-                    KeyCode::Tab => todo!(),
-                    KeyCode::BackTab => todo!(),
-                    KeyCode::Delete => todo!(),
-                    KeyCode::Insert => todo!(),
-                    KeyCode::F(_) => todo!(),
-                    KeyCode::Char(c) => draw_letter(&mut terminal, &c).unwrap(),
-                    KeyCode::Null => todo!(),
-                    KeyCode::Esc => break,
-                },
-                None => break,
-            }
-
-            if size != terminal.size().unwrap() {
-                draw(&mut terminal).unwrap();
-            }
+        if let Err(e) = tui.run().await {
+            println!("Something went wrong: {}", e)
         }
-
-        shutdown();
     }
 }
