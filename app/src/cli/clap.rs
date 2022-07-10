@@ -1,4 +1,14 @@
-use clap::{arg, Command};
+use clap::{arg, crate_description, crate_name, crate_version, Command};
+
+pub(crate) fn get_cli_commands() -> Command<'static> {
+    Command::new(crate_name!())
+        .about(crate_description!())
+        .version(crate_version!())
+        .subcommand(add_command())
+        .subcommand(remove_command())
+        .subcommand(open_command())
+        .subcommand(list_command())
+}
 
 pub(crate) fn add_command() -> Command<'static> {
     Command::new("add")

@@ -7,6 +7,19 @@ use lib::entry::Entry;
 
 use crate::{app::App, utils::format::format_entry};
 
+pub(crate) fn match_subcommand(app: &mut App, matches: &ArgMatches) {
+    match matches.subcommand() {
+        Some(command) => match command {
+            ("add", matches) => add_entry(app, matches),
+            ("remove", matches) => remove_entry(app, matches),
+            ("list", matches) => list_entries(app, matches),
+            ("open", matches) => open_entry(app, matches),
+            (_, &_) => panic!("The clap app should have handled this"),
+        },
+        None => panic!("Should not be here - TUI has to be run instead"),
+    }
+}
+
 // Extracts a file path from the matches provided, constructs an entry from
 // it and adds it to the bookshelf.
 pub(crate) fn add_entry(app: &mut App, matches: &ArgMatches) {

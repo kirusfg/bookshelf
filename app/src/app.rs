@@ -1,14 +1,10 @@
-use clap::{crate_description, crate_name, crate_version, ArgMatches, Command};
-
+use clap::{ArgMatches, Command};
 use crossterm::event::KeyCode;
+
 use lib::{entry::Entry, shelf::Shelf};
 
 use crate::{
-    cli::{
-        add_entry,
-        clap::{add_command, list_command, open_command, remove_command},
-        list_entries, open_entry, remove_entry,
-    },
+    cli::{clap::get_cli_commands, match_subcommand},
     config::Config,
     tui::{
         draw, draw_letter,
@@ -34,13 +30,7 @@ impl App {
 
         let shelf = Shelf::open(config.db())?;
 
-        let cli_commands = Command::new(crate_name!())
-            .about(crate_description!())
-            .version(crate_version!())
-            .subcommand(add_command())
-            .subcommand(remove_command())
-            .subcommand(open_command())
-            .subcommand(list_command());
+        let cli_commands = get_cli_commands();
 
         Ok(Self {
             config,
@@ -123,16 +113,7 @@ impl App {
 
     /// Expands the provided matches and runs the appropriate command handler.
     fn run_command(&mut self, matches: &ArgMatches) {
-        match matches.subcommand() {
-            Some(command) => match command {
-                ("add", matches) => add_entry(self, matches),
-                ("remove", matches) => remove_entry(self, matches),
-                ("list", matches) => list_entries(self, matches),
-                ("open", matches) => open_entry(self, matches),
-                (_, &_) => todo!(),
-            },
-            None => todo!(),
-        }
+        match_subcommand(self, matches);
     }
 
     /// Runs the bookshelf TUI
