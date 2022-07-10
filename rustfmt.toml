@@ -1,2 +1,11 @@
-max_width=80
-wrap_comments=true
+edition = "2021"
+
+max_width = 80
+wrap_comments = true
+
+match_block_trailing_comma = true
+
+use_field_init_shorthand = true
+
+error_on_line_overflow = true
+error_on_unformatted = true

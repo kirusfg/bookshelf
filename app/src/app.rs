@@ -148,7 +148,7 @@ impl App {
             let size = terminal.size().unwrap();
 
             match rx.recv().await {
-                Some(Event::Tick) => {}
+                Some(Event::Tick) => {},
                 Some(Event::Input(key)) => match key {
                     KeyCode::Backspace => todo!(),
                     KeyCode::Enter => todo!(),

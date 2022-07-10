@@ -29,10 +29,10 @@ impl Display for Error {
         match self {
             Error::DuplicateEntry => {
                 write!(f, "The entry is already on the shelf")
-            }
+            },
             Error::NoSuchEntry => {
                 write!(f, "The requested entry is not on the shelf")
-            }
+            },
             Error::Write => write!(f, "Writing to the database failed"),
             Error::Read => write!(f, "Writing from the database failed"),
         }
@@ -73,7 +73,7 @@ impl Shelf {
                 }
 
                 Ok(())
-            }
+            },
             false => Err(Error::DuplicateEntry),
         }
     }

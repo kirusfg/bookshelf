@@ -25,10 +25,10 @@ pub(crate) fn add_entry(app: &mut App, matches: &ArgMatches) {
     match app.add_entry(&entry) {
         Ok(()) => {
             println!("Successfully added '{}'", entry_name)
-        }
+        },
         Err(e) => {
             println!("Couldn't add '{}': {}", entry_name, e)
-        }
+        },
     }
 }
 
@@ -48,7 +48,7 @@ pub(crate) fn remove_entry(app: &mut App, matches: &ArgMatches) {
                 Ok(()) => println!("Successfully removed '{}''", entry_name),
                 Err(e) => println!("Couldn't remove '{}': {}", entry_name, e),
             }
-        }
+        },
         Err(e) => println!("Couldn't remove entry {}: {}", entry_index, e),
     }
 }
@@ -83,12 +83,12 @@ pub(crate) fn open_entry(app: &mut App, matches: &ArgMatches) {
                         entry_name,
                         exe.unwrap()
                     )
-                }
+                },
                 Err(e) => {
                     println!("Couldn't open '{}': {}", entry_name, e)
-                }
+                },
             }
-        }
+        },
         Err(e) => println!("Couldn't open entry {}: {}", entry_index, e),
     }
 }
