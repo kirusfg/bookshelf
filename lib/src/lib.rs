@@ -1,5 +1,5 @@
 #![deny(missing_docs, clippy::all)]
-//! A bookshelf library
+//! The bookshelf library
 
 /// Entry definition
 pub mod entry;
