@@ -1,36 +1,28 @@
-use std::io;
+use std::ops::Deref;
 
 use tui::{
     backend::Backend,
-    widgets::{Block, Borders},
-    Terminal,
+    widgets::{Block, Borders, List, ListItem},
+    Frame,
 };
 
-pub(crate) fn draw<B: Backend>(
-    terminal: &mut Terminal<B>,
-) -> Result<(), io::Error> {
-    terminal.draw(|f| {
-        let size = f.size();
-        let block = Block::default().title("Entries").borders(Borders::ALL);
-        f.render_widget(block, size);
-    })?;
+use super::state::State;
 
-    Ok(())
-}
+pub(crate) fn ui<B: Backend>(f: &mut Frame<B>, state: &mut State) {
+    let size = f.size();
+    let block = Block::default()
+        .title(state.title.clone())
+        .borders(Borders::ALL);
 
-pub(crate) fn draw_letter<B: Backend>(
-    terminal: &mut Terminal<B>,
-    letter: &char,
-) -> Result<(), io::Error> {
-    terminal
-        .draw(|f| {
-            let size = f.size();
-            let block = Block::default()
-                .title(letter.to_string())
-                .borders(Borders::ALL);
-            f.render_widget(block, size);
-        })
-        .unwrap();
+    let items = state
+        .entries
+        .items
+        .iter()
+        .map(|entry| ListItem::new(entry.deref()))
+        .collect::<Vec<ListItem>>();
+    let list = List::new(items);
+    let list_size = block.inner(size);
 
-    Ok(())
+    f.render_widget(block, size);
+    f.render_stateful_widget(list, list_size, &mut state.entries.state);
 }

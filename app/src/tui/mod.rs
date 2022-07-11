@@ -1,4 +1,5 @@
-pub(crate) mod events;
+mod events;
+mod state;
 mod ui;
 
 use std::{
@@ -15,32 +16,57 @@ use crossterm::{
         LeaveAlternateScreen,
     },
 };
-use tui::{backend::CrosstermBackend, Terminal};
+use tui::{
+    backend::CrosstermBackend,
+    widgets::{Block, Borders},
+    Terminal,
+};
+
+use crate::app::App;
 
 use self::{
     events::{Event, EventLoop},
-    ui::{draw, draw_letter},
+    state::State,
+    ui::ui,
 };
 
-pub(crate) struct Tui {
+pub(crate) struct Tui<'a> {
+    app: &'a App,
+    state: State,
     terminal: Terminal<CrosstermBackend<Stdout>>,
     event_loop: EventLoop,
 }
 
-impl Tui {
-    pub fn new(tick_rate: Duration) -> Self {
+impl<'a> Tui<'a> {
+    pub fn new(app: &'a mut App, tick_rate: Duration) -> Self {
         let terminal = setup_terminal().unwrap();
+        let mut state = State::default();
+        state.entries.items = app
+            .list_entries()
+            .iter()
+            .map(|(_, entry)| {
+                entry
+                    .path
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .collect();
 
         let event_loop = EventLoop::new(tick_rate);
 
         Self {
+            app,
+            state,
             terminal,
             event_loop,
         }
     }
 
     pub async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        draw(&mut self.terminal)?;
+        self.terminal.draw(|f| ui(f, &mut self.state))?;
 
         loop {
             let size = self.terminal.size()?;
@@ -63,27 +89,34 @@ impl Tui {
                     KeyCode::Delete => todo!(),
                     KeyCode::Insert => todo!(),
                     KeyCode::F(_) => todo!(),
-                    KeyCode::Char(c) => draw_letter(&mut self.terminal, &c)?,
+                    KeyCode::Char(c) => match c {
+                        'q' => self.state.should_exit = true,
+                        c => {
+                            self.state.title = c.to_string();
+                            self.state.should_redraw = true;
+                        },
+                    },
                     KeyCode::Null => todo!(),
-                    KeyCode::Esc => break,
+                    KeyCode::Esc => self.state.should_exit = true,
                 },
-                None => break,
+                None => self.state.should_exit = true,
             }
 
-            if size != self.terminal.size()? {
-                draw(&mut self.terminal)?;
+            if self.state.should_exit {
+                break;
+            }
+
+            let should_redraw =
+                self.state.should_redraw || size != self.terminal.size()?;
+
+            if should_redraw {
+                self.terminal.draw(|f| ui(f, &mut self.state))?;
             }
         }
 
         shutdown();
 
         Ok(())
-    }
-}
-
-impl Default for Tui {
-    fn default() -> Self {
-        Self::new(Duration::from_millis(1000 / 120)) // 120 FPS
     }
 }
 
