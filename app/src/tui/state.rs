@@ -1,5 +1,6 @@
 use tui::widgets::ListState;
 
+#[derive(Clone)]
 pub(crate) struct State {
     pub(crate) title: String,
     pub(crate) should_exit: bool,
@@ -18,29 +19,16 @@ impl Default for State {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StatefulList<T> {
     pub state: ListState,
     pub items: Vec<T>,
 }
 
 impl<T> StatefulList<T> {
-    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
-        StatefulList {
-            state: ListState::default(),
-            items,
-        }
-    }
-
     pub fn next(&mut self) {
         let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            },
+            Some(i) => (i + 1) % self.items.len(),
             None => 0,
         };
         self.state.select(Some(i));
@@ -48,13 +36,7 @@ impl<T> StatefulList<T> {
 
     pub fn previous(&mut self) {
         let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.items.len() - 1
-                } else {
-                    i - 1
-                }
-            },
+            Some(i) => (i + self.items.len() - 1) % self.items.len(),
             None => 0,
         };
         self.state.select(Some(i));

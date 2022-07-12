@@ -16,11 +16,7 @@ use crossterm::{
         LeaveAlternateScreen,
     },
 };
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders},
-    Terminal,
-};
+use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::app::App;
 
@@ -75,7 +71,7 @@ impl<'a> Tui<'a> {
                 Some(Event::Tick) => {},
                 Some(Event::Input(key)) => match key {
                     KeyCode::Backspace => todo!(),
-                    KeyCode::Enter => todo!(),
+                    KeyCode::Enter | KeyCode::Char('l') => self.open_entry(),
                     KeyCode::Left => todo!(),
                     KeyCode::Right => todo!(),
                     KeyCode::Up => todo!(),
@@ -89,15 +85,24 @@ impl<'a> Tui<'a> {
                     KeyCode::Delete => todo!(),
                     KeyCode::Insert => todo!(),
                     KeyCode::F(_) => todo!(),
+                    KeyCode::Esc | KeyCode::Char('q') => {
+                        self.state.should_exit = true
+                    },
                     KeyCode::Char(c) => match c {
-                        'q' => self.state.should_exit = true,
+                        'j' => {
+                            self.state.entries.next();
+                            self.state.should_redraw = true;
+                        },
+                        'k' => {
+                            self.state.entries.previous();
+                            self.state.should_redraw = true;
+                        },
                         c => {
                             self.state.title = c.to_string();
                             self.state.should_redraw = true;
                         },
                     },
                     KeyCode::Null => todo!(),
-                    KeyCode::Esc => self.state.should_exit = true,
                 },
                 None => self.state.should_exit = true,
             }
@@ -111,12 +116,21 @@ impl<'a> Tui<'a> {
 
             if should_redraw {
                 self.terminal.draw(|f| ui(f, &mut self.state))?;
+                self.state.should_redraw = false;
             }
         }
 
         shutdown();
 
         Ok(())
+    }
+
+    fn open_entry(&self) {
+        let entry_index = self.state.entries.state.selected().unwrap() + 1;
+
+        let entry = self.app.shelf.get_index(entry_index).unwrap();
+
+        self.app.open_entry(entry, None).unwrap();
     }
 }
 
