@@ -27,18 +27,31 @@ pub struct StatefulList<T> {
 
 impl<T> StatefulList<T> {
     pub fn next(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => (i + 1) % self.items.len(),
-            None => 0,
+        let index = match self.state.selected() {
+            Some(i) => Some((i + 1) % self.items.len()),
+            None if self.items.is_empty() => None,
+            None => Some(0),
         };
-        self.state.select(Some(i));
+        self.state.select(index);
     }
 
     pub fn previous(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => (i + self.items.len() - 1) % self.items.len(),
-            None => 0,
+        let index = match self.state.selected() {
+            Some(i) => Some((i + self.items.len() - 1) % self.items.len()),
+            None if self.items.is_empty() => None,
+            None => Some(0),
         };
-        self.state.select(Some(i));
+        self.state.select(index);
+    }
+
+    pub fn first(&mut self) {
+        if !self.items.is_empty() {
+            self.state.select(Some(0));
+        }
+    }
+    pub fn last(&mut self) {
+        if !self.items.is_empty() {
+            self.state.select(Some(self.items.len() - 1));
+        }
     }
 }

@@ -27,7 +27,7 @@ use self::{
 };
 
 pub(crate) struct Tui<'a> {
-    app: &'a App,
+    app: &'a mut App,
     state: State,
     terminal: Terminal<CrosstermBackend<Stdout>>,
     event_loop: EventLoop,
@@ -67,45 +67,7 @@ impl<'a> Tui<'a> {
         loop {
             let size = self.terminal.size()?;
 
-            match self.event_loop.rx.recv().await {
-                Some(Event::Tick) => {},
-                Some(Event::Input(key)) => match key {
-                    KeyCode::Backspace => todo!(),
-                    KeyCode::Enter | KeyCode::Char('l') => self.open_entry(),
-                    KeyCode::Left => todo!(),
-                    KeyCode::Right => todo!(),
-                    KeyCode::Up => todo!(),
-                    KeyCode::Down => todo!(),
-                    KeyCode::Home => todo!(),
-                    KeyCode::End => todo!(),
-                    KeyCode::PageUp => todo!(),
-                    KeyCode::PageDown => todo!(),
-                    KeyCode::Tab => todo!(),
-                    KeyCode::BackTab => todo!(),
-                    KeyCode::Delete => todo!(),
-                    KeyCode::Insert => todo!(),
-                    KeyCode::F(_) => todo!(),
-                    KeyCode::Esc | KeyCode::Char('q') => {
-                        self.state.should_exit = true
-                    },
-                    KeyCode::Char(c) => match c {
-                        'j' => {
-                            self.state.entries.next();
-                            self.state.should_redraw = true;
-                        },
-                        'k' => {
-                            self.state.entries.previous();
-                            self.state.should_redraw = true;
-                        },
-                        c => {
-                            self.state.title = c.to_string();
-                            self.state.should_redraw = true;
-                        },
-                    },
-                    KeyCode::Null => todo!(),
-                },
-                None => self.state.should_exit = true,
-            }
+            self.match_event().await;
 
             if self.state.should_exit {
                 break;
@@ -125,12 +87,76 @@ impl<'a> Tui<'a> {
         Ok(())
     }
 
+    async fn match_event(&mut self) {
+        match self.event_loop.rx.recv().await {
+            Some(Event::Tick) => {},
+            Some(Event::Input(key)) => match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    self.state.entries.previous();
+                    self.state.should_redraw = true;
+                },
+                KeyCode::Down | KeyCode::Char('j') => {
+                    self.state.entries.next();
+                    self.state.should_redraw = true;
+                },
+                KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => {
+                    self.open_entry();
+                },
+                KeyCode::Delete | KeyCode::Char('d') => {
+                    self.remove_entry();
+                    self.state.should_redraw = true;
+                },
+                KeyCode::Home | KeyCode::Char('K') => {
+                    self.state.entries.first();
+                    self.state.should_redraw = true;
+                },
+                KeyCode::End | KeyCode::Char('J') => {
+                    self.state.entries.last();
+                    self.state.should_redraw = true;
+                },
+                KeyCode::Esc | KeyCode::Char('q') => {
+                    self.state.should_exit = true;
+                },
+                _ => {},
+            },
+            None => self.state.should_exit = true,
+        }
+    }
+
+    fn get_entry_list(&mut self) {
+        self.state.entries.items = self
+            .app
+            .list_entries()
+            .iter()
+            .map(|(_, entry)| {
+                entry
+                    .path
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .collect();
+    }
+
     fn open_entry(&self) {
-        let entry_index = self.state.entries.state.selected().unwrap() + 1;
+        if let Some(index) = self.state.entries.state.selected() {
+            let entry_index = index + 1;
+            let entry = self.app.shelf.get_index(entry_index).unwrap();
 
-        let entry = self.app.shelf.get_index(entry_index).unwrap();
+            self.app.open_entry(entry, None).unwrap();
+        }
+    }
 
-        self.app.open_entry(entry, None).unwrap();
+    fn remove_entry(&mut self) {
+        if let Some(index) = self.state.entries.state.selected() {
+            let entry_index = index + 1;
+
+            self.app.remove_entry_index(entry_index).unwrap();
+
+            self.get_entry_list();
+        }
     }
 }
 
