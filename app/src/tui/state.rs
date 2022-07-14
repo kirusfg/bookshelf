@@ -6,6 +6,8 @@ pub(crate) struct State {
     pub(crate) should_exit: bool,
     pub(crate) should_redraw: bool,
     pub(crate) entries: StatefulList<String>,
+    pub(crate) editing_prompt: bool,
+    pub(crate) prompt: String,
 }
 
 impl Default for State {
@@ -15,6 +17,8 @@ impl Default for State {
             should_exit: false,
             should_redraw: false,
             entries: StatefulList::default(),
+            editing_prompt: false,
+            prompt: String::from(""),
         }
     }
 }
