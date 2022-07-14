@@ -8,7 +8,6 @@ use std::{
 };
 
 use crossterm::{
-    cursor::Show,
     event::{DisableMouseCapture, EnableMouseCapture, KeyCode},
     execute,
     terminal::{
@@ -82,7 +81,7 @@ impl<'a> Tui<'a> {
             }
         }
 
-        shutdown();
+        shutdown(&mut self.terminal)?;
 
         Ok(())
     }
@@ -177,14 +176,22 @@ pub(crate) fn setup_terminal(
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
     terminal.hide_cursor()?;
 
     Ok(terminal)
 }
 
-pub(crate) fn shutdown() {
-    // TODO: replace unwraps with try (?)
-    disable_raw_mode().unwrap();
-    execute!(stdout(), LeaveAlternateScreen, DisableMouseCapture).unwrap();
-    execute!(stdout(), Show).unwrap();
+pub(crate) fn shutdown(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+) -> Result<(), io::Error> {
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    Ok(())
 }
