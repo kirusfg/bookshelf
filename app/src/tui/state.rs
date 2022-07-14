@@ -26,6 +26,10 @@ pub struct StatefulList<T> {
 }
 
 impl<T> StatefulList<T> {
+    pub fn deselect(&mut self) {
+        self.state.select(None);
+    }
+
     pub fn next(&mut self) {
         let index = match self.state.selected() {
             Some(i) => Some((i + 1) % self.items.len()),

@@ -138,6 +138,10 @@ impl<'a> Tui<'a> {
                     .to_string()
             })
             .collect();
+
+        if self.state.entries.items.is_empty() {
+            self.state.entries.deselect();
+        }
     }
 
     fn open_entry(&self) {
@@ -156,6 +160,11 @@ impl<'a> Tui<'a> {
             self.app.remove_entry_index(entry_index).unwrap();
 
             self.get_entry_list();
+
+            // Last item was selected; select a new last item
+            if index == self.state.entries.items.len() {
+                self.state.entries.last();
+            }
         }
     }
 }
