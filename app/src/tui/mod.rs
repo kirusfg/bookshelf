@@ -17,7 +17,7 @@ use crossterm::{
 };
 use tui::{backend::CrosstermBackend, Terminal};
 
-use crate::app::App;
+use crate::{app::App, utils::format::format_entry};
 
 use self::{
     events::{Event, EventLoop},
@@ -181,12 +181,14 @@ impl<'a> Tui<'a> {
         }
     }
 
-    fn open_entry(&self) {
+    fn open_entry(&mut self) {
         if let Some(index) = self.state.entries.state.selected() {
             let entry_index = index + 1;
             let entry = self.app.shelf.get_index(entry_index).unwrap();
 
             self.app.open_entry(entry, None).unwrap();
+            self.state.prompt =
+                format!("Opened '{}'", format_entry(entry_index, entry));
         }
     }
 
