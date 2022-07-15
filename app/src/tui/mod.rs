@@ -66,7 +66,7 @@ impl<'a> Tui<'a> {
         loop {
             let size = self.terminal.size()?;
 
-            self.match_event().await;
+            self.match_events().await;
 
             if self.state.should_exit {
                 break;
@@ -86,39 +86,77 @@ impl<'a> Tui<'a> {
         Ok(())
     }
 
-    async fn match_event(&mut self) {
+    async fn match_events(&mut self) {
+        // The TUI is set to redraw at the next frame just for convenience.
+        // Be sure to set should_redraw to false whenever you don't need
+        // that behavior.
+        self.state.should_redraw = true;
+
         match self.event_loop.rx.recv().await {
-            Some(Event::Tick) => {},
-            Some(Event::Input(key)) => match key {
+            // TODO: think if you need the tick event at all, because the
+            // TUI is reactive. Could there be something progress related?
+            Some(Event::Tick) => {
+                self.state.should_redraw = false;
+            },
+            Some(Event::Input(key)) => {
+                self.match_inputs(key);
+            },
+            None => self.state.should_exit = true,
+        }
+    }
+
+    fn match_inputs(&mut self, key: KeyCode) {
+        // Prompt interaction
+        if self.state.editing_prompt {
+            match key {
+                KeyCode::Char(c) => {
+                    self.state.prompt.push(c);
+                },
+                KeyCode::Backspace => {
+                    self.state.prompt.pop();
+                },
+                KeyCode::Esc => {
+                    self.state.editing_prompt = false;
+                },
+                KeyCode::Enter => {
+                    // Execute the last queued command here
+                    todo!();
+                },
+                _ => {
+                    self.state.should_redraw = false;
+                },
+            }
+        } else {
+            match key {
                 KeyCode::Up | KeyCode::Char('k') => {
                     self.state.entries.previous();
-                    self.state.should_redraw = true;
                 },
                 KeyCode::Down | KeyCode::Char('j') => {
                     self.state.entries.next();
-                    self.state.should_redraw = true;
                 },
                 KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => {
                     self.open_entry();
                 },
-                KeyCode::Delete | KeyCode::Char('d') => {
-                    self.remove_entry();
-                    self.state.should_redraw = true;
-                },
                 KeyCode::Home | KeyCode::Char('K') => {
                     self.state.entries.first();
-                    self.state.should_redraw = true;
                 },
                 KeyCode::End | KeyCode::Char('J') => {
                     self.state.entries.last();
-                    self.state.should_redraw = true;
+                },
+                KeyCode::Delete | KeyCode::Char('d') => {
+                    self.remove_entry();
+                },
+                KeyCode::Char('a') => {
+                    self.state.editing_prompt = true;
+                    self.state.prompt.clear();
                 },
                 KeyCode::Esc | KeyCode::Char('q') => {
                     self.state.should_exit = true;
                 },
-                _ => {},
-            },
-            None => self.state.should_exit = true,
+                _ => {
+                    self.state.should_redraw = false;
+                },
+            }
         }
     }
 
