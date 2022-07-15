@@ -30,8 +30,14 @@ impl EventLoop {
                     .unwrap_or_else(|| Duration::from_secs(0));
 
                 if poll(timeout).unwrap() {
-                    if let crossterm::event::Event::Key(key) = read().unwrap() {
-                        tx.send(Event::Input(key.code)).unwrap();
+                    match read().unwrap() {
+                        crossterm::event::Event::Key(key) => {
+                            tx.send(Event::Input(key.code)).unwrap()
+                        },
+                        crossterm::event::Event::Resize(_, _) => {
+                            tx.send(Event::Tick).unwrap()
+                        },
+                        _ => {},
                     }
                 }
 

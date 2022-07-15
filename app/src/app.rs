@@ -113,9 +113,9 @@ impl App {
         match_subcommand(self, matches);
     }
 
-    /// Runs the bookshelf TUI at 120 FPS
+    /// Runs the bookshelf TUI at 1 FPS
     async fn run_tui(&mut self) {
-        let mut tui = Tui::new(self, Duration::from_millis(1000 / 120));
+        let mut tui = Tui::new(self, Duration::from_millis(1000));
 
         if let Err(e) = tui.run().await {
             println!("Something went wrong: {}", e)
