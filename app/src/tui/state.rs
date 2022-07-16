@@ -7,6 +7,7 @@ pub(crate) struct State {
     pub(crate) should_redraw: bool,
     pub(crate) entries: StatefulList<String>,
     pub(crate) editing_prompt: bool,
+    pub(crate) prompt_title: String,
     pub(crate) prompt: String,
 }
 
@@ -18,7 +19,8 @@ impl Default for State {
             should_redraw: false,
             entries: StatefulList::default(),
             editing_prompt: false,
-            prompt: String::from(""),
+            prompt_title: "Prompt".to_string(),
+            prompt: "".to_string(),
         }
     }
 }

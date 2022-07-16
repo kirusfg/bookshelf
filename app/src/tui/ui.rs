@@ -41,7 +41,11 @@ pub(crate) fn ui<B: Backend>(f: &mut Frame<B>, state: &mut State) {
             false => Style::default(),
             true => Style::default().fg(Color::Yellow),
         })
-        .block(Block::default().borders(Borders::ALL).title("Prompt"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(state.prompt_title.clone()),
+        );
 
     f.render_stateful_widget(list, chunks[0], &mut state.entries.state);
     f.render_widget(prompt, chunks[1]);

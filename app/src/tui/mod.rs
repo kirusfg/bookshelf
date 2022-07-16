@@ -115,7 +115,9 @@ impl<'a> Tui<'a> {
                     self.state.prompt.pop();
                 },
                 KeyCode::Esc => {
+                    self.state.prompt_title = "Prompt".to_string();
                     self.state.editing_prompt = false;
+                    self.state.prompt.clear();
                 },
                 KeyCode::Enter => {
                     // Execute the last queued command here
@@ -135,6 +137,7 @@ impl<'a> Tui<'a> {
                 },
                 KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => {
                     self.open_entry();
+                    self.state.prompt_title = "Success".to_string();
                 },
                 KeyCode::Home | KeyCode::Char('K') => {
                     self.state.entries.first();
@@ -146,6 +149,7 @@ impl<'a> Tui<'a> {
                     self.remove_entry();
                 },
                 KeyCode::Char('a') => {
+                    self.state.prompt_title = "Add an entry".to_string();
                     self.state.editing_prompt = true;
                     self.state.prompt.clear();
                 },
