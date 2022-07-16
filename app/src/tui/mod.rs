@@ -86,11 +86,6 @@ impl<'a> Tui<'a> {
     }
 
     async fn match_events(&mut self) {
-        // The TUI is set to redraw at the next frame just for convenience.
-        // Be sure to set should_redraw to false whenever you don't need
-        // that behavior.
-        self.state.should_redraw = true;
-
         match self.event_loop.rx.recv().await {
             // TODO: think if you need the tick event at all, because the
             // TUI is reactive. Could there be something progress related?
@@ -105,6 +100,11 @@ impl<'a> Tui<'a> {
     }
 
     fn match_inputs(&mut self, key: KeyCode) {
+        // The TUI is set to redraw at the next frame just for convenience.
+        // Be sure to set should_redraw to false whenever you don't need
+        // that behavior.
+        self.state.should_redraw = true;
+
         // Prompt interaction
         if self.state.editing_prompt {
             match key {
