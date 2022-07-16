@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use clap::{ArgMatches, Command};
 
 use lib::{entry::Entry, shelf::Shelf};
@@ -98,7 +96,7 @@ impl App {
         self.shelf.entries.len()
     }
 
-    /// Decides whether the user is to run a CLI command or use the TUI
+    /// Decides whether the user is to run a CLI command or use the TUI.
     pub(crate) async fn start(&mut self) {
         let matches = self.cli_commands.clone().get_matches();
 
@@ -113,9 +111,9 @@ impl App {
         match_subcommand(self, matches);
     }
 
-    /// Runs the bookshelf TUI at 1 FPS
+    /// Runs the bookshelf TUI.
     async fn run_tui(&mut self) {
-        let mut tui = Tui::new(self, Duration::from_millis(1000));
+        let mut tui = Tui::new(self);
 
         if let Err(e) = tui.run().await {
             println!("Something went wrong: {}", e)

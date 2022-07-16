@@ -2,10 +2,7 @@ mod events;
 mod state;
 mod ui;
 
-use std::{
-    io::{self, stdout, Stdout},
-    time::Duration,
-};
+use std::io::{self, stdout, Stdout};
 
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture, KeyCode},
@@ -33,7 +30,7 @@ pub(crate) struct Tui<'a> {
 }
 
 impl<'a> Tui<'a> {
-    pub fn new(app: &'a mut App, tick_rate: Duration) -> Self {
+    pub fn new(app: &'a mut App) -> Self {
         let terminal = setup_terminal().unwrap();
         let mut state = State::default();
         state.entries.items = app
@@ -50,7 +47,7 @@ impl<'a> Tui<'a> {
             })
             .collect();
 
-        let event_loop = EventLoop::new(tick_rate);
+        let event_loop = EventLoop::default();
 
         Self {
             app,
@@ -60,6 +57,8 @@ impl<'a> Tui<'a> {
         }
     }
 
+    /// Runs the TUI life cycle: draw the UI, check for events, gracefully
+    /// shutdown on exit.
     pub async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.terminal.draw(|f| ui(f, &mut self.state))?;
 

@@ -25,6 +25,9 @@ impl EventLoop {
             let mut last_tick = Instant::now();
 
             loop {
+                // The default tick_rate is 1 FPS, which means that the terminal
+                // will wait for an event for 1 second before sending a Tick
+                // event itself.
                 let timeout = tick_rate
                     .checked_sub(last_tick.elapsed())
                     .unwrap_or_else(|| Duration::from_secs(0));
@@ -53,5 +56,11 @@ impl EventLoop {
         });
 
         Self { rx }
+    }
+}
+
+impl Default for EventLoop {
+    fn default() -> Self {
+        Self::new(Duration::from_millis(1000))
     }
 }
