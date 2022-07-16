@@ -1,3 +1,5 @@
+**The project is now on SourceHut**: https://git.sr.ht/~kirusfg/bookshelf
+
 <p align="center">
     <br>
     <img src="https://github.com/kirusfg/bookshelf/blob/main/assets/logo.png" width="800"/>
